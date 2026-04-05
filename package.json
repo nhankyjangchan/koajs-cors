@@ -1,0 +1,82 @@
+{
+    "name": "@nhankyjangchan/koajs-cors",
+    "version": "1.0.0",
+    "private": false,
+    "description": "Cross-Origin Resource Sharing (CORS) middleware for KoaJS written in TypeScript",
+    "keywords": [
+        "cors",
+        "middleware",
+        "Cross-Origin Resource Sharing",
+        "koa-cors",
+        "koa/cors",
+        "koa",
+        "koajs"
+    ],
+    "homepage": "https://github.com/nhankyjangchan/koajs-cors",
+    "license": "MIT",
+    "type": "module",
+    "module": "./dist/index.mjs",
+    "main": "./dist/index.cjs",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "dist",
+        "!dist/*.map",
+        "HISTORY.md",
+        "LICENSE",
+        "README.md",
+        "package.json"
+    ],
+    "author": {
+        "name": "Timur Schuchkin \"Nhankyjangchan\"",
+        "email": "dev.schuchkin.timur@gmail.com",
+        "url": "https://github.com/nhankyjangchan"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/nhankyjangchan/koajs-cors.git"
+    },
+    "bugs": {
+        "url": "https://github.com/nhankyjangchan/koajs-cors/issues",
+        "email": "dev.schuchkin.timur@gmail.com"
+    },
+    "scripts": {
+        "build": "bun run build:cjs && bun run build:esm && bun run build:types",
+        "build:cjs": "bun build ./src/index.ts --outfile ./dist/index.cjs --target node --format cjs --external \"*\"",
+        "build:esm": "bun build ./src/index.ts --outfile ./dist/index.mjs --target node --format esm --external \"*\"",
+        "build:types": "tsc --emitDeclarationOnly --outDir ./dist",
+        "p:write": "bunx prettier . --write"
+    },
+    "engines": {
+        "bun": ">= 1.3",
+        "node": ">= 22",
+        "npm": ">= 9"
+    },
+    "os": [
+        "darwin",
+        "linux",
+        "win32",
+        "aix",
+        "freebsd",
+        "openbsd"
+    ],
+    "devDependencies": {
+        "@types/http-errors": "^2.0.5",
+        "@types/koa": "^3.0.2",
+        "@types/node": "^25.5.2",
+        "@types/vary": "^1.1.3",
+        "prettier": "^3.8.1",
+        "typescript": "^6.0.2"
+    },
+    "dependencies": {
+        "http-errors": "^2.0.1",
+        "vary": "^1.1.2"
+    }
+}
