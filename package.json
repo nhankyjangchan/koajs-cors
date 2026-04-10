@@ -1,6 +1,6 @@
 {
     "name": "@nhankyjangchan/koajs-cors",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "private": false,
     "description": "Cross-Origin Resource Sharing (CORS) middleware for KoaJS written in TypeScript",
     "keywords": [
@@ -48,8 +48,8 @@
     },
     "scripts": {
         "build": "bun run build:cjs && bun run build:esm && bun run build:types",
-        "build:cjs": "bun build ./src/index.ts --outfile ./dist/index.cjs --target node --format cjs --external \"*\"",
-        "build:esm": "bun build ./src/index.ts --outfile ./dist/index.mjs --target node --format esm --external \"*\"",
+        "build:cjs": "bun build ./src/index.ts --outfile ./dist/index.cjs --target node --format cjs --minify --external '*'",
+        "build:esm": "bun build ./src/index.ts --outfile ./dist/index.mjs --target node --format esm --minify --external '*'",
         "build:types": "tsc --emitDeclarationOnly --outDir ./dist",
         "p:write": "bunx prettier . --write"
     },

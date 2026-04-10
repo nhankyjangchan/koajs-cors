@@ -3,7 +3,7 @@ import type { HttpError } from 'http-errors';
 import type { Context, Next, Middleware } from 'koa';
 
 export interface Options {
-    origin?: string | string[];
+    origin?: string | string[] | ((ctx: Context) => string | Promise<string>);
     allowMethods?: string | string[];
     exposeHeaders?: string | string[];
     allowHeaders?: string | string[];
@@ -13,6 +13,7 @@ export interface Options {
     originOpenerPolicy?: boolean;
     originEmbedderPolicy?: boolean;
     keepHeadersOnError?: boolean;
+    shouldSkip?: undefined | false | ((ctx: Context) => boolean | Promise<boolean>);
 }
 
 type Headers = {
@@ -28,17 +29,14 @@ export default function cors(options: Options): Middleware {
         privateNetworkAccess: false,
         originOpenerPolicy: false,
         originEmbedderPolicy: false,
-        keepHeadersOnError: true
+        keepHeadersOnError: true,
+        shouldSkip: false
     };
 
     const pluginOptions: Options = {
         ...defaultOptions,
         ...options
     };
-
-    const doesOriginExist: boolean = !!pluginOptions.origin && pluginOptions.origin?.length > 0;
-    if (doesOriginExist === false)
-        pluginOptions.origin = '*';
 
     if (Array.isArray(pluginOptions.allowMethods))
         pluginOptions.allowMethods = pluginOptions.allowMethods.join(',');
@@ -53,6 +51,36 @@ export default function cors(options: Options): Middleware {
         ? String(pluginOptions.maxAge)
         : undefined;
 
+    async function resolveOrigin(requestOrigin: string, ctx: Context): Promise<string> {
+        const originType: string = typeof pluginOptions.origin;
+        if (originType === 'string')
+            return matchOriginFromString(requestOrigin, ctx);
+        else if (originType === 'function')
+            return await computeOrigin(ctx);
+        else if (Array.isArray(pluginOptions.origin))
+            return matchOriginFromArray(requestOrigin, ctx);
+        else ctx.throw(403);
+    }
+
+    function matchOriginFromString(requestOrigin: string, ctx: Context): string {
+        if (pluginOptions.origin !== requestOrigin && pluginOptions.origin !== '*')
+            ctx.throw(403);
+        return pluginOptions.origin;
+    }
+
+    async function computeOrigin(ctx: Context): Promise<string> {
+        const origin: string = await (pluginOptions.origin as Function)(ctx);
+        if (!origin)
+            ctx.throw(403);
+        return origin;
+    }
+
+    function matchOriginFromArray(requestOrigin: string, ctx: Context): string {
+        if (!(pluginOptions.origin as Array<string>).includes(requestOrigin))
+            ctx.throw(403);
+        return requestOrigin;
+    }
+
     return async function (ctx: Context, next: Next): Promise<void> {
         ctx.vary('Origin');
 
@@ -60,42 +88,38 @@ export default function cors(options: Options): Middleware {
         if (!requestOrigin)
             return await next();
 
-        let origin: string;
+        if (typeof pluginOptions.shouldSkip === 'function') {
+            const shouldSkip: boolean = await pluginOptions.shouldSkip(ctx);
+            if (shouldSkip)
+                return await next();
+        }
 
-        if (Array.isArray(pluginOptions.origin)) {
-            if (!pluginOptions.origin.includes(requestOrigin))
-                ctx.throw(403);
-            origin = requestOrigin;
-        } else if (typeof pluginOptions.origin === 'string') {
-            if (pluginOptions.origin !== requestOrigin && pluginOptions.origin !== '*')
-                ctx.throw(403);
-            origin = pluginOptions.origin;
-        } else ctx.throw(403);
+        let origin: string = await resolveOrigin(requestOrigin, ctx);
 
         if (pluginOptions.credentials && origin === '*')
             origin = requestOrigin;
 
         const corsHeaders: Headers = {};
 
-        function setHeader(key: string, value: string): void {
+        function applyHeader(key: string, value: string): void {
             ctx.set(key, value);
             corsHeaders[key] = value;
         }
 
         if (ctx.method !== 'OPTIONS') {
-            setHeader('Access-Control-Allow-Origin', origin);
+            applyHeader('Access-Control-Allow-Origin', origin);
 
             if (pluginOptions.exposeHeaders)
-                setHeader('Access-Control-Expose-Headers', pluginOptions.exposeHeaders as string);
+                applyHeader('Access-Control-Expose-Headers', pluginOptions.exposeHeaders as string);
 
             if (pluginOptions.credentials)
-                setHeader('Access-Control-Allow-Credentials', 'true');
+                applyHeader('Access-Control-Allow-Credentials', 'true');
 
             if (pluginOptions.originOpenerPolicy)
-                setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+                applyHeader('Cross-Origin-Opener-Policy', 'same-origin');
 
             if (pluginOptions.originEmbedderPolicy)
-                setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+                applyHeader('Cross-Origin-Embedder-Policy', 'require-corp');
 
             if (!pluginOptions.keepHeadersOnError)
                 return await next();
@@ -103,15 +127,15 @@ export default function cors(options: Options): Middleware {
             try {
                 return await next();
             } catch (err: unknown) {
-                const errorHeaders: Headers = (err as HttpError)?.headers || {};
-                const varyHeader: string = errorHeaders['Vary'] || errorHeaders['vary'] || '';
-                const mergedVaryHeader: string = append(varyHeader, 'Origin');
+                const headersFromError: Headers = (err as HttpError)?.headers || {};
+                const baseVaryHeader: string = headersFromError['Vary'] || headersFromError['vary'] || '';
+                const mergedVaryHeader: string = append(baseVaryHeader, 'Origin');
 
-                delete errorHeaders['Vary'];
-                delete errorHeaders['vary'];
+                delete headersFromError['Vary'];
+                delete headersFromError['vary'];
 
                 (err as HttpError).headers = {
-                    ...errorHeaders,
+                    ...headersFromError,
                     ...corsHeaders,
                     vary: mergedVaryHeader
                 };

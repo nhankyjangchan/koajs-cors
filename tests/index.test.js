@@ -131,6 +131,65 @@ describe('CORS middleware', () => {
             });
         });
 
+        describe('origin = function', () => {
+            it('should set origin that is http://koajs.com', async () => {
+                app.use(cors({ origin: () => 'http://koajs.com' }));
+                app.use((ctx) => {
+                    ctx.body = { key: 'value' };
+                });
+
+                await request(app.callback())
+                    .get('/')
+                    .set('Origin', 'http://koajs.com')
+                    .expect(200)
+                    .expect('Access-Control-Allow-Origin', 'http://koajs.com')
+                    .expect({ key: 'value' });
+            });
+
+            it('should async set origin that is http://koajs.com', async () => {
+                app.use(cors({ origin: async () => 'http://koajs.com' }));
+                app.use((ctx) => {
+                    ctx.body = { key: 'value' };
+                });
+
+                await request(app.callback())
+                    .get('/')
+                    .set('Origin', 'http://koajs.com')
+                    .expect(200)
+                    .expect('Access-Control-Allow-Origin', 'http://koajs.com')
+                    .expect({ key: 'value' });
+            });
+
+            it('should set `Access-Control-Allow-Origin` from `Origin`', async () => {
+                app.use(cors({ origin: (ctx) => ctx.get('Origin') }));
+                app.use((ctx) => {
+                    ctx.body = { key: 'value' };
+                });
+
+                await request(app.callback())
+                    .get('/')
+                    .set('Origin', 'http://koajs.com')
+                    .expect(200)
+                    .expect('Access-Control-Allow-Origin', 'http://koajs.com')
+                    .expect({ key: 'value' });
+            });
+
+            it('should reject with 403', async () => {
+                app.use(cors({ origin: (ctx) => false }));
+                app.use((ctx) => {
+                    ctx.body = { key: 'value' };
+                });
+
+                await request(app.callback())
+                    .get('/')
+                    .set('Origin', 'http://koajs.com')
+                    .expect(403)
+                    .expect(res => {
+                        expect(res.headers['access-control-allow-origin']).toBeUndefined();
+                    });
+            });
+        });
+
         describe('origin = array', () => {
             it('should set `Access-Control-Allow-Origin` to the origin when matches allowed list', async () => {
                 app.use(cors({ origin: ['https://allowed1.com', 'http://koajs.com'] }));

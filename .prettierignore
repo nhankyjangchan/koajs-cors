@@ -5,6 +5,9 @@
 # Dependency directories;
 node_modules/
 
+# Dependency managers;
+.npmrc
+
 # Build directories;
 dist/
 build/

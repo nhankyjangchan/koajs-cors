@@ -1,7 +1,7 @@
 # Dependency directories;
 node_modules/
 
-# NPM;
+# Dependency managers;
 .npmrc
 
 # Build directories;
