@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 The project adheres to [Semantic Versioning](https://semver.org).
 
+## **1.3.0** / 2026-04-11
+
+### Added
+
+- **Dynamic Credentials Resolution**: The `credentials` option now accepts a function `(ctx: Context) => boolean | Promise<boolean>`, enabling dynamic and context-aware CORS credential policies (e.g., enabling credentials only for authenticated requests).
+- **Tests**: Added 5 new test cases covering function-based `credentials` and `shouldSkip` options, bringing the total test suite to 49 of 49 passing tests.
+
+### Changed
+
+- **Origin Resolver Factory**: Introduced `createOriginResolver` factory function. This closure pre-computes the origin validation strategy at startup and returns a bound resolver (`matchOriginFromString`, `computeOrigin`, `matchOriginFromArray`, or `rejectRequest`) based on `Options.origin` type, eliminating redundant type checking on every request cycle and positively impacting performance.
+- **Credentials Resolver Factory**: Introduced `createCredentialsResolver` factory function. This closure pre-computes the credentials resolution strategy at startup, returning either `computeCredentials` (for function-based config) or `staticCredentials` (for boolean config), optimizing per-request evaluation.
+- **`shouldSkip` Evaluation**: The `typeof pluginOptions.shouldSkip === 'function'` check is now computed once at startup and stored in `isShouldSkipFunction` constant, removing runtime type checking overhead on every request.
+
 ## **1.2.0** / 2026-04-10
 
 ### Added

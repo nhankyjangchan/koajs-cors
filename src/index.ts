@@ -8,13 +8,17 @@ export interface Options {
     exposeHeaders?: string | string[];
     allowHeaders?: string | string[];
     maxAge?: string | undefined;
-    credentials?: boolean;
+    credentials?: boolean | Predicate;
     privateNetworkAccess?: boolean;
     originOpenerPolicy?: boolean;
     originEmbedderPolicy?: boolean;
     keepHeadersOnError?: boolean;
-    shouldSkip?: undefined | false | ((ctx: Context) => boolean | Promise<boolean>);
+    shouldSkip?: undefined | false | Predicate;
 }
+
+type Predicate = (ctx: Context) => boolean | Promise<boolean>;
+type OriginResolver = (ctx: Context, requestOrigin: string) => string | Promise<string>;
+type CredentialsResolver = (ctx: Context) => boolean | Promise<boolean>;
 
 type Headers = {
     [key: string]: string;
@@ -51,35 +55,60 @@ export default function cors(options: Options): Middleware {
         ? String(pluginOptions.maxAge)
         : undefined;
 
-    async function resolveOrigin(requestOrigin: string, ctx: Context): Promise<string> {
-        const originType: string = typeof pluginOptions.origin;
+    const originType: string = typeof pluginOptions.origin;
+    const isOriginArray: boolean = Array.isArray(pluginOptions.origin);
+
+    const resolveOrigin: OriginResolver = createOriginResolver();
+    const resolveCredentials: CredentialsResolver = createCredentialsResolver();
+
+    function createOriginResolver(): OriginResolver {
         if (originType === 'string')
-            return matchOriginFromString(requestOrigin, ctx);
+            return matchOriginFromString;
         else if (originType === 'function')
-            return await computeOrigin(ctx);
-        else if (Array.isArray(pluginOptions.origin))
-            return matchOriginFromArray(requestOrigin, ctx);
-        else ctx.throw(403);
+            return computeOrigin;
+        else if (isOriginArray)
+            return matchOriginFromArray;
+        else return rejectRequest;
+
+        function matchOriginFromString(ctx: Context, requestOrigin: string): string {
+            if (pluginOptions.origin !== requestOrigin && pluginOptions.origin !== '*')
+                ctx.throw(403);
+            return pluginOptions.origin as string;
+        }
+
+        async function computeOrigin(ctx: Context): Promise<string> {
+            const origin: string = await (pluginOptions.origin as Function)(ctx);
+            if (!origin)
+                ctx.throw(403);
+            return origin;
+        }
+
+        function matchOriginFromArray(ctx: Context, requestOrigin: string): string {
+            if (!(pluginOptions.origin as Array<string>).includes(requestOrigin!))
+                ctx.throw(403);
+            return requestOrigin as string;
+        }
+
+        function rejectRequest(ctx: Context): never {
+            ctx.throw(403);
+        }
     }
 
-    function matchOriginFromString(requestOrigin: string, ctx: Context): string {
-        if (pluginOptions.origin !== requestOrigin && pluginOptions.origin !== '*')
-            ctx.throw(403);
-        return pluginOptions.origin;
+    function createCredentialsResolver(): CredentialsResolver {
+        if (typeof pluginOptions.credentials === 'function')
+            return computeCredentials;
+        return staticCredentials;
+
+        async function computeCredentials(ctx: Context): Promise<boolean> {
+            return await (pluginOptions.credentials as Predicate)(ctx);
+        }
+
+        function staticCredentials(): boolean {
+            return pluginOptions.credentials as boolean;
+        }
     }
 
-    async function computeOrigin(ctx: Context): Promise<string> {
-        const origin: string = await (pluginOptions.origin as Function)(ctx);
-        if (!origin)
-            ctx.throw(403);
-        return origin;
-    }
-
-    function matchOriginFromArray(requestOrigin: string, ctx: Context): string {
-        if (!(pluginOptions.origin as Array<string>).includes(requestOrigin))
-            ctx.throw(403);
-        return requestOrigin;
-    }
+    const isShouldSkipFunction: boolean = typeof pluginOptions.shouldSkip === 'function';
 
     return async function (ctx: Context, next: Next): Promise<void> {
         ctx.vary('Origin');
@@ -88,15 +117,16 @@ export default function cors(options: Options): Middleware {
         if (!requestOrigin)
             return await next();
 
-        if (typeof pluginOptions.shouldSkip === 'function') {
-            const shouldSkip: boolean = await pluginOptions.shouldSkip(ctx);
+        if (isShouldSkipFunction) {
+            const shouldSkip: boolean = await (pluginOptions.shouldSkip as Predicate)(ctx);
             if (shouldSkip)
                 return await next();
         }
 
-        let origin: string = await resolveOrigin(requestOrigin, ctx);
+        let origin: string = await resolveOrigin(ctx, requestOrigin);
+        let credentials: boolean = await resolveCredentials(ctx);
 
-        if (pluginOptions.credentials && origin === '*')
+        if (credentials && origin === '*')
             origin = requestOrigin;
 
         const corsHeaders: Headers = {};
@@ -112,7 +142,7 @@ export default function cors(options: Options): Middleware {
             if (pluginOptions.exposeHeaders)
                 applyHeader('Access-Control-Expose-Headers', pluginOptions.exposeHeaders as string);
 
-            if (pluginOptions.credentials)
+            if (credentials)
                 applyHeader('Access-Control-Allow-Credentials', 'true');
 
             if (pluginOptions.originOpenerPolicy)
@@ -160,7 +190,7 @@ export default function cors(options: Options): Middleware {
             if (pluginOptions.maxAge)
                 ctx.set('Access-Control-Max-Age', pluginOptions.maxAge);
 
-            if (pluginOptions.credentials)
+            if (credentials)
                 ctx.set('Access-Control-Allow-Credentials', 'true');
 
             const requestedPrivateNetwork: string = ctx.get('Access-Control-Request-Private-Network');
