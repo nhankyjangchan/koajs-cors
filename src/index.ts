@@ -7,7 +7,7 @@ export interface Options {
     allowMethods?: string | string[];
     exposeHeaders?: string | string[];
     allowHeaders?: string | string[];
-    maxAge?: string | undefined;
+    maxAge?: string | number | undefined;
     credentials?: boolean | Predicate;
     privateNetworkAccess?: boolean;
     originOpenerPolicy?: boolean;
@@ -51,9 +51,9 @@ export default function cors(options: Options): Middleware {
     if (Array.isArray(pluginOptions.allowHeaders))
         pluginOptions.allowHeaders = pluginOptions.allowHeaders.join(',');
 
-    pluginOptions.maxAge = Number.isInteger(+pluginOptions.maxAge!)
+    const maxAge: string | null = Number.isInteger(+pluginOptions.maxAge!)
         ? String(pluginOptions.maxAge)
-        : undefined;
+        : null;
 
     const originType: string = typeof pluginOptions.origin;
     const isOriginArray: boolean = Array.isArray(pluginOptions.origin);
@@ -187,8 +187,8 @@ export default function cors(options: Options): Middleware {
             if (allowHeaders)
                 ctx.set('Access-Control-Allow-Headers', allowHeaders);
 
-            if (pluginOptions.maxAge)
-                ctx.set('Access-Control-Max-Age', pluginOptions.maxAge);
+            if (maxAge)
+                ctx.set('Access-Control-Max-Age', maxAge);
 
             if (credentials)
                 ctx.set('Access-Control-Allow-Credentials', 'true');

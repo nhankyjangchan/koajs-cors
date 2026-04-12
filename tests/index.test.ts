@@ -9,7 +9,7 @@ describe('CORS middleware', (): void => {
         const app = new Koa();
 
         app.use(cors());
-        app.use((ctx) => {
+        app.use((ctx: Context): void => {
             ctx.body = { key: 'value' };
         });
 

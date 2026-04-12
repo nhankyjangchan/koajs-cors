@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 The project adheres to [Semantic Versioning](https://semver.org).
 
+## **1.3.1** / 2026-04-12
+
+### Fixed
+
+- **`maxAge` Type Extension**: The `maxAge` option in the `Options` interface now accepts `number` and `undefined` in addition to `string`. This aligns the TypeScript definitions with the internal runtime coercion logic (`String(pluginOptions.maxAge)`), allowing users to pass numeric values (e.g., `3600`) directly without type errors.
+
 ## **1.3.0** / 2026-04-11
 
 ### Added

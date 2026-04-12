@@ -93,7 +93,7 @@ export interface Options {
      * @example
      * maxAge: '86400' // 24 hours
      */
-    maxAge?: string | undefined;
+    maxAge?: string | number | undefined;
 
     /**
      * Configure the `Access-Control-Allow-Credentials` header.
