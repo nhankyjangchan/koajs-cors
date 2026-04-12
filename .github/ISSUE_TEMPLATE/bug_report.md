@@ -28,8 +28,7 @@ A clear and concise description of what you expected to happen.
 
 **Environment (please complete the following information):**
  - OS: [e.g. Ubuntu 24.04]
- - Runtime: [e.g. Bun]
- - Runtime version: [e.g. v1.3.12]
+ - Runtime: [e.g. Bun v1.3.12]
  - Package version: [e.g. v1.2.0]
 
 **Additional context**
