@@ -3,7 +3,6 @@ description: Create a bug report to help solve the problem
 title: '[BUG] '
 labels: ['bug']
 assignees: ['nhankyjangchan']
-type: 'bug'
 body:
     - type: markdown
       id: bug_report-header

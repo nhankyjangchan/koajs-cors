@@ -3,7 +3,6 @@ description: Suggest an idea for this package
 title: '[FEATURE] '
 labels: ['enhancement']
 assignees: ['nhankyjangchan']
-type: 'bug'
 body:
     - type: markdown
       id: feature_request-header
