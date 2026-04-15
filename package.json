@@ -1,19 +1,21 @@
 {
-    "name": "@nhankyjangchan/koajs-cors",
-    "version": "1.3.2",
+    "name": "@nhankyjangchan/koa-cors",
+    "version": "1.4.0",
     "private": false,
     "description": "Cross-Origin Resource Sharing (CORS) middleware for KoaJS written in TypeScript",
     "keywords": [
         "cors",
         "middleware",
+        "http",
         "Cross-Origin Resource Sharing",
         "koajs-cors",
         "koa-cors",
         "koa/cors",
         "koa",
-        "koajs"
+        "koajs",
+        "@nhankyjangchan/koajs-cors"
     ],
-    "homepage": "https://github.com/nhankyjangchan/koajs-cors",
+    "homepage": "https://github.com/nhankyjangchan/koa-cors",
     "license": "MIT",
     "type": "module",
     "types": "./dist/index.d.ts",
@@ -41,10 +43,10 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/nhankyjangchan/koajs-cors.git"
+        "url": "git+https://github.com/nhankyjangchan/koa-cors.git"
     },
     "bugs": {
-        "url": "https://github.com/nhankyjangchan/koajs-cors/issues",
+        "url": "https://github.com/nhankyjangchan/koa-cors/issues",
         "email": "dev.schuchkin.timur@gmail.com"
     },
     "scripts": {

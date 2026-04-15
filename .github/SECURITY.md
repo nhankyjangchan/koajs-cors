@@ -1,6 +1,6 @@
 # Security Policy
 
-Thank you for helping keep `@nhankyjangchan/koajs-cors` and its users safe. Security is taken seriously, and your responsible disclosure is greatly appreciated.
+Thank you for helping keep package **[@nhankyjangchan/koa-cors](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)** (previous name before v1.4.0 was [@nhankyjangchan/koajs-cors](https://www.npmjs.com/package/@nhankyjangchan/koajs-cors), which is now a legacy package) and its users safe. Security is taken seriously, and your responsible disclosure is greatly appreciated.
 
 ## Supported Versions
 
@@ -8,10 +8,11 @@ Only the latest minor version receives active security updates. If you are using
 
 | Version | Supported          | Notes               |
 | ------- | ------------------ | ------------------- |
-| 1.3.x   | :white_check_mark: | Active maintenance  |
-| 1.2.x   | :white_check_mark: | Security fixes only |
-| 1.1.x   | :white_check_mark: | Security fixes only |
-| < 1.1   | :x:                | No longer supported |
+| 1.4.x   | :white_check_mark: | Active maintenance  |
+| 1.3.x   | :white_check_mark: | Security fixes only |
+| 1.2.x   | :x:                | No longer supported |
+| 1.1.x   | :x:                | No longer supported |
+| 1.0.x   | :x:                | No longer supported |
 
 ## Reporting a Vulnerability
 
@@ -19,7 +20,7 @@ Only the latest minor version receives active security updates. If you are using
 
 ### Where to report
 
-Send an email to **[dev.schuchkin.timur@gmail.com](mailto:dev.schuchkin.timur@gmail.com)** with the following details:
+Send an email to **[dev.schuchkin.timur@gmail.com](mailto:dev.schuchkin.timur@gmail.com)** or write to me directly on **[Telegram](https://t.me/nhankyjangchan)** with the following details:
 
 - **Package version** where the vulnerability was found
 - **Affected configuration** (if applicable)
@@ -44,8 +45,8 @@ Send an email to **[dev.schuchkin.timur@gmail.com](mailto:dev.schuchkin.timur@gm
 
 ## Recognition
 
-Thank you to everyone who has helped improve the security of this library. Contributors will be acknowledged here.
+Thank you to everyone who has helped improve the security of this package. Contributors will be acknowledged here.
 
 ---
 
-<sub>💙 Thanks for helping improve this library!</sub>
+<sub>💙 Thanks for helping improve this package!</sub>

@@ -8,9 +8,9 @@ body:
       id: bug_report-header
       attributes:
           value: |
-              ⚠️ **Before filling this form:** Please ensure you've read the [documentation](https://github.com/nhankyjangchan/koajs-cors) and searched for [existing issues](https://github.com/nhankyjangchan/koajs-cors/issues).
+              ⚠️ **Before filling this form:** Please ensure you've read the [documentation](https://github.com/nhankyjangchan/koa-cors) and searched for [existing issues](https://github.com/nhankyjangchan/koa-cors/issues).
 
-              If you believe you've found a **security vulnerability**, please **DO NOT** report it here. Please review the project's [Security Policy](https://github.com/nhankyjangchan/koajs-cors/security/policy).
+              If you believe you've found a **security vulnerability**, please **DO NOT** report it here. Please review the project's [Security Policy](https://github.com/nhankyjangchan/koa-cors/security/policy).
 
     - type: textarea
       id: bug_description
@@ -78,7 +78,7 @@ body:
           render: javascript
           placeholder: |
               import Koa from 'koa';
-              import cors from '@nhankyjangchan/koajs-cors';
+              import cors from '@nhankyjangchan/koa-cors';
 
               const app = new Koa();
               app.use(cors({ //options }));
@@ -103,6 +103,7 @@ body:
           description: Please specify the package version where the bug was found.
           multiple: false
           options:
+              - v1.4.x
               - v1.3.x
               - v1.2.x
               - v1.1.x

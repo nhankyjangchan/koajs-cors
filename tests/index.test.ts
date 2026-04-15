@@ -1,6 +1,6 @@
 import request from 'supertest';
 import Koa from 'koa';
-import cors from '../dist/index.mjs';
+import cors from '../src/index.js';
 import type { Context, Next } from 'koa';
 import type { Response } from 'supertest';
 
@@ -194,7 +194,7 @@ describe('CORS middleware', (): void => {
             });
 
             it('should reject with 403', async (): Promise<void> => {
-                app.use(cors({ origin: (): boolean => false }));
+                app.use(cors({ origin: (): string => '' }));
                 app.use((ctx: Context): void => {
                     ctx.body = { key: 'value' };
                 });
@@ -236,6 +236,25 @@ describe('CORS middleware', (): void => {
                     .get('/')
                     .set('Origin', 'https://not-allowed.com')
                     .expect(403)
+                    .expect((res: Response): void => {
+                        expect(res.header['vary']).toBeUndefined();
+                        expect(res.headers['access-control-allow-origin']).toBeUndefined();
+                    });
+            });
+        });
+
+        describe('invalid origin type', (): void => {
+            it('should return 500 when Origin type is invalid', async (): Promise<void> => {
+                // @ts-ignore
+                app.use(cors({ origin: new Set() }));
+                app.use((ctx: Context): void => {
+                    ctx.body = { key: 'value' };
+                });
+
+                await request(app.callback())
+                    .get('/')
+                    .set('Origin', 'https://not-allowed.com')
+                    .expect(500)
                     .expect((res: Response): void => {
                         expect(res.header['vary']).toBeUndefined();
                         expect(res.headers['access-control-allow-origin']).toBeUndefined();
@@ -285,7 +304,7 @@ describe('CORS middleware', (): void => {
         });
 
         it('should skip allowMethods', async (): Promise<void> => {
-            app.use(cors({ allowMethods: null }));
+            app.use(cors({ allowMethods: undefined }));
 
             await request(app.callback())
                 .options('/')
@@ -350,7 +369,7 @@ describe('CORS middleware', (): void => {
         });
 
         it('should not set exposeHeaders when value is null', async (): Promise<void> => {
-            app.use(cors({ exposeHeaders: null }));
+            app.use(cors({ exposeHeaders: undefined }));
             app.use((ctx: Context): void => {
                 ctx.body = { foo: 'bar' };
             });
@@ -417,7 +436,7 @@ describe('CORS middleware', (): void => {
         });
 
         it('should use request headers when allowHeaders is null', async (): Promise<void> => {
-            app.use(cors({ allowHeaders: null }));
+            app.use(cors({ allowHeaders: undefined }));
             app.use((ctx: Context): void => {
                 ctx.body = { foo: 'bar' };
             });

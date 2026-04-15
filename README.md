@@ -1,23 +1,57 @@
-# @nhankyjangchan/koajs-cors
+# @nhankyjangchan/koa-cors
 
-[![npm version](https://img.shields.io/npm/v/@nhankyjangchan/koajs-cors)](https://www.npmjs.com/package/@nhankyjangchan/koajs-cors)
-[![npm downloads](https://img.shields.io/npm/dm/@nhankyjangchan/koajs-cors)](https://www.npmjs.com/package/@nhankyjangchan/koajs-cors)
-[![license](https://img.shields.io/npm/l/@nhankyjangchan/koajs-cors)](https://github.com/nhankyjangchan/koajs-cors/blob/main/LICENSE)
+Previous name before v1.4.0 was [@nhankyjangchan/koajs-cors](https://www.npmjs.com/package/@nhankyjangchan/koajs-cors), which is now a legacy package
 
-[Cross-Origin Resource Sharing(CORS)](https://developer.mozilla.org/en/docs/Web/HTTP/Access_control_CORS) for KoaJS written in TypeScript
+[![npm version](https://img.shields.io/npm/v/%40nhankyjangchan%2Fkoa-cors?style=for-the-badge&logo=npm&color=blue)](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)
+[![github repo](https://img.shields.io/badge/github-repo-blue?logo=github&style=for-the-badge)](https://github.com/nhankyjangchan/koa-cors)
+[![node version](https://img.shields.io/badge/node.js-%3E%3Dv20-yellow?logo=nodedotjs&style=for-the-badge)](https://nodejs.org/en/download)
+[![bun version](https://img.shields.io/badge/bun-%3E%3Dv1.3-yellow?logo=bun&style=for-the-badge)](https://bun.com/)
+[![npm downloads](https://img.shields.io/npm/dw/%40nhankyjangchan%2Fkoa-cors?style=for-the-badge&color=lightgreen)](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)
+[![unpacked Size](https://img.shields.io/npm/unpacked-size/%40nhankyjangchan%2Fkoa-cors?style=for-the-badge&color=lightgreen)](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)
+[![last update](https://img.shields.io/npm/last-update/%40nhankyjangchan%2Fkoa-cors?style=for-the-badge&color=lightgreen)](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)
+[![license](https://img.shields.io/npm/l/%40nhankyjangchan%2Fkoa-cors?style=for-the-badge&color=orange)](https://github.com/nhankyjangchan/koa-cors/blob/main/LICENSE)
 
-Handles CORS requests by setting appropriate headers for both simple requests and preflight (OPTIONS) requests. Validates the `Origin` header against the configured whitelist and throws a 403 error for unauthorized origins.
+[Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en/docs/Web/HTTP/Access_control_CORS) for KoaJS written in TypeScript
+
+Handles CORS requests by setting appropriate headers for both simple requests and preflight (OPTIONS) requests. Validates the `Origin` header against the configured whitelist and throws a 403 error for unauthorized origins. Throws a 500 error if the `origin` option is set to an invalid type.
+
+Automatically adds `Vary: Origin` header to all responses to ensure proper caching behaviour when different origins may receive different headers.
+
+**Features:**
+
+- Static or dynamic origin validation (string, array, or function)
+- Automatically adds `Vary: Origin` header for proper caching
+- Preflight request handling with proper method and header validation
+- Credentials support with automatic `*` to explicit origin conversion
+- Private Network Access support
+- Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy headers
+- Error handling with CORS header preservation
+- Conditional skipping of CORS processing
+
+## ⚠️ WARNING
+
+> **Package Migration!**
+>
+> This package was previously published as **`@nhankyjangchan/koajs-cors`**.
+> To get the latest features, bug fixes, and improvements, please switch to the new **`@nhankyjangchan/koa-cors`** package instead of legacy `@nhankyjangchan/koajs-cors`.
+> The legacy package is now in **maintenance mode** and will only receive critical security fixes beyond version `1.3.x`.
 
 ## Installation
 
 ```bash
-$ npm i @nhankyjangchan/koajs-cors@^1.1.0
+$ npm i @nhankyjangchan/koa-cors
 ```
 
 or
 
 ```bash
-$ bun add @nhankyjangchan/koajs-cors@^1.1.0
+$ bun add @nhankyjangchan/koa-cors
+```
+
+or for legacy package
+
+```bash
+$ npm i @nhankyjangchan/koajs-cors@^1.1.0
 ```
 
 ## Options
@@ -32,7 +66,8 @@ export interface Options {
      *
      * Accepts a static string, an array of allowed origins, or a function for dynamic resolution.
      * The function receives the Koa context and may return a string or a Promise resolving to a string.
-     * If the function returns an empty string, the request will be rejected with a 403.
+     * If the function returns a falsy value (empty string, `null`, `undefined`), the request will be rejected with a 403.
+     * If the option is set to an invalid type, the request will be rejected with a 500.
      *
      * @default '*'
      * @example
@@ -54,12 +89,12 @@ export interface Options {
      *   return domain ? domain.url : '';
      * }
      */
-    origin?: string | string[] | ((ctx: Context) => string | Promise<string>);
+    origin?: string | string[] | Plugin.ComputeOrigin;
 
     /**
      * Configure the `Access-Control-Allow-Methods` header.
      *
-     * @default 'HEAD,POST,GET,PATCH,PUT,DELETE'
+     * @default ['HEAD', 'POST', 'GET', 'PATCH', 'PUT', 'DELETE']
      * @example
      * allowMethods: ['GET', 'POST']
      * allowMethods: 'GET,POST,PUT'
@@ -93,7 +128,7 @@ export interface Options {
      * @example
      * maxAge: '86400' // 24 hours
      */
-    maxAge?: string | number | undefined;
+    maxAge?: string | number;
 
     /**
      * Configure the `Access-Control-Allow-Credentials` header.
@@ -106,7 +141,7 @@ export interface Options {
      *
      * @default false
      */
-    credentials?: boolean;
+    credentials?: boolean | Plugin.Predicate;
 
     /**
      * Enable Private Network Access handling.
@@ -164,8 +199,7 @@ export interface Options {
      * (or a Promise resolving to a boolean). If the function returns `true`,
      * the middleware immediately calls `next()` without adding any CORS headers.
      *
-     * Useful for bypassing CORS checks on certain routes or conditions
-     * (e.g., health check endpoints, static assets, or internal API calls).
+     * Set to `false` or not set anything to never skip CORS processing.
      *
      * @default false
      * @example
@@ -181,7 +215,7 @@ export interface Options {
      *   return isWhitelistedIP;
      * }
      */
-    shouldSkip?: undefined | false | ((ctx: Context) => boolean | Promise<boolean>);
+    shouldSkip?: false | Plugin.Predicate;
 }
 ```
 
@@ -206,33 +240,53 @@ const defaultOptions: Options = {
 
 ## Usage
 
-```js
-// ESM
-import Koa from 'koa';
-import cors from '@nhankyjangchan/koajs-cors';
+```ts
+/**
+ * File `src/plugins/cors.plugin.ts`.
+ */
+import koaCors from '@nhankyjangchan/koa-cors'; // ESM
+const koaCors = require('@nhankyjangchan/koa-cors').default; // CJS
+// For version before v1.4.0 use `@nhankyjangchan/koajs-cors`
+import type { Options } from '@nhankyjangchan/koa-cors';
+import type { Middleware } from 'koa';
 
-// CJS
-const Koa = require('koa');
-const cors = require('@nhankyjangchan/koajs-cors').default;
+const cors: Middleware = (function () {
+    const options: Options = {
+        origin: 'https://example.com',
+        allowMethods: ['HEAD', 'GET', 'POST', 'PUT', 'DELETE'],
+        exposeHeaders: ['X-Pagination-Offset', 'X-Response-Time'],
+        allowHeaders: ['Content-Type', 'Authorization'],
+        maxAge: 3600,
+        credentials: true,
+        privateNetworkAccess: false,
+        originOpenerPolicy: false,
+        originEmbedderPolicy: false,
+        keepHeadersOnError: true,
+        shouldSkip: false
+    };
+
+    return koaCors(options);
+})();
+
+export default cors;
+
+/**
+ * File `src/app.ts`.
+ */
+import Koa from 'koa';
+import cors from './plugins/cors.plugin.ts';
 
 const app = new Koa();
 
-app.use(
-    cors({
-        origin: ['https://example.com', 'https://another.com'],
-        credentials: true,
-        allowMethods: ['GET', 'POST', 'PUT', 'DELETE'],
-        maxAge: '3600'
-    })
-);
-
+app.use(cors);
+// ...
 app.listen(3000);
 ```
 
 ## Tests
 
 ```bash
-$ bun test
+$ bun test --coverage
 ```
 
 ## Releases

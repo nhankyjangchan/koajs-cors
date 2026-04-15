@@ -3,17 +3,37 @@
 All notable changes to this project will be documented in this file.
 The project adheres to [Semantic Versioning](https://semver.org).
 
+## **1.4.0** / 2026-04-15
+
+### Info
+
+- **Package Migration**: The previous package `@nhankyjangchan/koajs-cors` is now considered **legacy** and will enter **maintenance mode**. Legacy package will receive critical security fixes only starting from version `1.3.x`. Users are strongly encouraged to migrate to `@nhankyjangchan/koa-cors` to receive ongoing feature updates and improvements.
+- **Package Renamed**: The package has been officially renamed from `@nhankyjangchan/koajs-cors` to **`@nhankyjangchan/koa-cors`**. This change reflects a cleaner, more conventional naming pattern for Koa middleware packages and aligns with community standards.
+- **Package Metadata**: All metadata fields in `package.json` have been updated to reflect the new package name, including `name`, `bugs`, `homepage`, and `repository`. Package description, keywords, author information, and license remain unchanged to maintain consistency.
+- **GitHub Repository**: The repository has been renamed from `koajs-cors` to **`koa-cors`**. All references in the package metadata, documentation, and badges have been updated accordingly. Issue templates have also been updated to reflect the new package and repository name. GitHub automatically redirects traffic from the old repository URL to the new one, ensuring existing links and bookmarks continue to function without interruption.
+- **Security Policy**: The package security policy has been updated to reflect the package changes. The supported versions table has been revised to include the `1.4.x` release line as actively maintained, while `1.2.x` and `1.1.x` are now marked as no longer supported. All security advisory procedures and disclosure policies remain otherwise unchanged.
+
+### Added
+
+- **Tests**: Added 1 new test case covering the invalid `origin` type scenario (`Set` object passed as `origin`). The test verifies that the middleware correctly responds with a `500` status code and does not leak any CORS headers in the error response. Total test suite now passes 50 out of 50 tests.
+
+### Changed
+
+- **Optional Options Parameter**: The `options` parameter in the middleware factory function is now optional and defaults to an empty object `{}`. Previously, the parameter was required, forcing users to explicitly pass an object even when using all default settings. This change improves developer experience by allowing the middleware to be used as `app.use(cors())` without providing an empty configuration object.
+- **Invalid Origin Type Handling**: Updated error handling for invalid `origin` option types. Previously, when the `origin` option was set to an invalid type (e.g., `number`, `boolean`, `object`, `Set`, `Map`, etc.), the middleware would incorrectly respond with a `403 Forbidden` error, which was semantically misleading since the issue is a server-side configuration error rather than an authorization failure. The middleware now correctly throws a `500 Internal Server Error`, providing clearer and more accurate feedback during development and debugging.
+- **Type Definitions Refactoring**: Internal type definitions (`Predicate`, `OriginResolver`, `CredentialsResolver`, `Headers`) have been moved into a dedicated `Plugin` namespace. This improves code organization and provides a cleaner public API surface for TypeScript users. The `Options` interface now references `Plugin.ComputeOrigin` and `Plugin.Predicate` instead of inline function signatures.
+
 ## **1.3.2** / 2026-04-13
+
+### Info
+
+- **No Functional Impact**: The changes in this release are limited to internal code organization, package manifest metadata, and build artifact formatting. There are no changes to API contracts, request handling logic, or type definitions. Existing tests (49/49) continue to pass without modification.
 
 ### Changed
 
 - **Code Cleanup**: Moved `originType` and `isOriginArray` constant initialization inside the `createOriginResolver` factory function. This is a cosmetic refactor that does not alter runtime behavior or performance characteristics; it simply keeps the variable declarations closer to their usage scope within the resolver factory.
 - **Package Metadata**: Updated the `keywords` array in `package.json` to correct the casing of the package name. This change affects only npm search indexing and does not impact the middleware's functional logic.
 - **CommonJS Build Output**: The compiled `index.cjs` file now includes a `'use strict'` directive. This ensures strict mode compliance for legacy CommonJS environments and aligns the build artifact with modern JavaScript best practices, while having zero impact on the middleware's API or functional behavior.
-
-### Info
-
-- **No Functional Impact**: The changes in this release are limited to internal code organization, package manifest metadata, and build artifact formatting. There are no changes to API contracts, request handling logic, or type definitions. Existing tests (49/49) continue to pass without modification.
 
 ## **1.3.1** / 2026-04-12
 

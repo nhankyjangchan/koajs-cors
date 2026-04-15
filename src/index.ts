@@ -3,28 +3,27 @@ import type { HttpError } from 'http-errors';
 import type { Context, Next, Middleware } from 'koa';
 
 export interface Options {
-    origin?: string | string[] | ((ctx: Context) => string | Promise<string>);
+    origin?: string | string[] | Plugin.ComputeOrigin;
     allowMethods?: string | string[];
     exposeHeaders?: string | string[];
     allowHeaders?: string | string[];
-    maxAge?: string | number | undefined;
-    credentials?: boolean | Predicate;
+    maxAge?: string | number;
+    credentials?: boolean | Plugin.Predicate;
     privateNetworkAccess?: boolean;
     originOpenerPolicy?: boolean;
     originEmbedderPolicy?: boolean;
     keepHeadersOnError?: boolean;
-    shouldSkip?: undefined | false | Predicate;
+    shouldSkip?: false | Plugin.Predicate;
 }
 
-type Predicate = (ctx: Context) => boolean | Promise<boolean>;
-type OriginResolver = (ctx: Context, requestOrigin: string) => string | Promise<string>;
-type CredentialsResolver = (ctx: Context) => boolean | Promise<boolean>;
+export namespace Plugin {
+    export type ComputeOrigin = (ctx: Context) => string | Promise<string>;
+    export type Predicate = (ctx: Context) => boolean | Promise<boolean>;
+    export type OriginResolver = (ctx: Context, requestOrigin: string) => string | Promise<string>;
+    export type Headers = Record<string, string>;
+}
 
-type Headers = {
-    [key: string]: string;
-};
-
-export default function cors(options: Options): Middleware {
+export default function cors(options: Options = {}): Middleware {
     const defaultOptions: Options = {
         origin: '*',
         allowMethods: ['HEAD', 'POST', 'GET', 'PATCH', 'PUT', 'DELETE'],
@@ -55,10 +54,10 @@ export default function cors(options: Options): Middleware {
         ? String(pluginOptions.maxAge)
         : null;
 
-    const resolveOrigin: OriginResolver = createOriginResolver();
-    const resolveCredentials: CredentialsResolver = createCredentialsResolver();
+    const resolveOrigin: Plugin.OriginResolver = createOriginResolver();
+    const resolveCredentials: Plugin.Predicate = createCredentialsResolver();
 
-    function createOriginResolver(): OriginResolver {
+    function createOriginResolver(): Plugin.OriginResolver {
         const originType: string = typeof pluginOptions.origin;
         const isOriginArray: boolean = Array.isArray(pluginOptions.origin);
 
@@ -90,17 +89,17 @@ export default function cors(options: Options): Middleware {
         }
 
         function rejectRequest(ctx: Context): never {
-            ctx.throw(403);
+            ctx.throw(500);
         }
     }
 
-    function createCredentialsResolver(): CredentialsResolver {
+    function createCredentialsResolver(): Plugin.Predicate {
         if (typeof pluginOptions.credentials === 'function')
             return computeCredentials;
         return staticCredentials;
 
         async function computeCredentials(ctx: Context): Promise<boolean> {
-            return await (pluginOptions.credentials as Predicate)(ctx);
+            return await (pluginOptions.credentials as Plugin.Predicate)(ctx);
         }
 
         function staticCredentials(): boolean {
@@ -118,7 +117,7 @@ export default function cors(options: Options): Middleware {
             return await next();
 
         if (isShouldSkipFunction) {
-            const shouldSkip: boolean = await (pluginOptions.shouldSkip as Predicate)(ctx);
+            const shouldSkip: boolean = await (pluginOptions.shouldSkip as Plugin.Predicate)(ctx);
             if (shouldSkip)
                 return await next();
         }
@@ -129,7 +128,7 @@ export default function cors(options: Options): Middleware {
         if (credentials && origin === '*')
             origin = requestOrigin;
 
-        const corsHeaders: Headers = {};
+        const corsHeaders: Plugin.Headers = {};
 
         function applyHeader(key: string, value: string): void {
             ctx.set(key, value);
@@ -157,7 +156,7 @@ export default function cors(options: Options): Middleware {
             try {
                 return await next();
             } catch (err: unknown) {
-                const headersFromError: Headers = (err as HttpError)?.headers || {};
+                const headersFromError: Plugin.Headers = (err as HttpError)?.headers || {};
                 const baseVaryHeader: string = headersFromError['Vary'] || headersFromError['vary'] || '';
                 const mergedVaryHeader: string = append(baseVaryHeader, 'Origin');
 
