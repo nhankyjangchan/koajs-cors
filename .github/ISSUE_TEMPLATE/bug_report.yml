@@ -1,16 +1,18 @@
-name: 🔴 Bug report
-description: Create a bug report to help solve the problem
+name: 🐛 Bug report
+description: Submit a detailed bug report to help investigate and resolve the issue with this plugin.
 title: '[BUG] '
 labels: ['bug']
 assignees: ['nhankyjangchan']
 body:
     - type: markdown
-      id: bug_report-header
+      id: bug_report-header-before-info
       attributes:
-          value: |
-              ⚠️ **Before filling this form:** Please ensure you've read the [documentation](https://github.com/nhankyjangchan/koa-cors) and searched for [existing issues](https://github.com/nhankyjangchan/koa-cors/issues).
+          value: ⚠️ **Before filling this form**, please ensure you've read the [documentation](https://github.com/nhankyjangchan/koa-cors) and searched for [existing issues](https://github.com/nhankyjangchan/koa-cors/issues).
 
-              If you believe you've found a **security vulnerability**, please **DO NOT** report it here. Please review the project's [Security Policy](https://github.com/nhankyjangchan/koa-cors/security/policy).
+    - type: markdown
+      id: bug_report-header-security-info
+      attributes:
+          value: 🔒 If you believe you've found a **security vulnerability**, **DO NOT** report it through public GitHub issues, discussions, pull requests, or any other public channel. Doing so exposes the vulnerability to potential attackers before a fix can be prepared and released, endangering all users who depend on this package. Instead, please review the project's **[Security Policy](https://github.com/nhankyjangchan/koa-cors/security/policy)** for details.
 
     - type: textarea
       id: bug_description
@@ -24,8 +26,8 @@ body:
     - type: textarea
       id: bug_reproduction-steps
       attributes:
-          label: To reproduce
-          description: Steps to reproduce the behavior.
+          label: Steps to reproduce
+          description: How to reproduce the behavior.
           placeholder: |
               1. Setup Koa with CORS: `app.use(cors({...}))`
               2. Make request from origin: `http://localhost:8080`
@@ -34,10 +36,10 @@ body:
           required: true
 
     - type: textarea
-      id: package_config
+      id: plugin_config
       attributes:
-          label: CORS configuration used
-          description: Paste your actual CORS configuration object here.
+          label: CORS plugin configuration used
+          description: Paste your CORS configuration exactly as it appears in your code.
           placeholder: |
               {
                   origin: 'https://koajs.com/',
@@ -88,7 +90,7 @@ body:
           required: false
 
     - type: textarea
-      id: package_expected-behavior
+      id: plugin_expected-behavior
       attributes:
           label: Expected behavior
           description: A clear and concise description of what you expected to happen.
@@ -97,7 +99,7 @@ body:
           required: true
 
     - type: dropdown
-      id: environment_lib
+      id: environment_package-version
       attributes:
           label: Package version
           description: Please specify the package version where the bug was found.
@@ -141,4 +143,4 @@ body:
     - type: markdown
       id: bug_report-footer
       attributes:
-          value: 💙 Thanks for helping improve this package!
+          value: 💙 Thanks for helping improve this plugin!

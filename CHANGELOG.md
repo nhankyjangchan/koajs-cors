@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 The project adheres to [Semantic Versioning](https://semver.org).
 
+## **1.4.1** / 2026-04-17
+
+### Info
+
+- **Documentation**: The `README.md` file has been significantly updated with a clearer structure, improved feature list, and a dedicated package migration note. The feature list is now fully synchronised with `index.d.ts`. The security policy (`SECURITY.md`) has been rewritten for clarity and now includes detailed migration instructions, a recognition section, and a consistent visual style.
+- **No Functional Changes**: This release includes only documentation and metadata updates. The middleware logic and public API remain unchanged from v1.4.0.
+
+### Changed
+
+- **Type Definitions (`index.d.ts`)**: Enhanced JSDoc comments across the `Options` interface and `Plugin` namespace. Added `@see` references to MDN and Fetch Standard specifications for all CORS-related options. Improved the feature list in the main `cors` function description to be more comprehensive and aligned with `README.md`.
+
 ## **1.4.0** / 2026-04-15
 
 ### Info

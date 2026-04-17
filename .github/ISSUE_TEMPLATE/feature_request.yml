@@ -1,5 +1,5 @@
 name: 💡 Feature request
-description: Suggest an idea for this package
+description: Propose a new feature or enhancement for this plugin.
 title: '[FEATURE] '
 labels: ['enhancement']
 assignees: ['nhankyjangchan']
@@ -7,8 +7,7 @@ body:
     - type: markdown
       id: feature_request-header
       attributes:
-          value: |
-              ⚠️ **Before filling this form:** Please ensure you've read the [documentation](https://github.com/nhankyjangchan/koa-cors) and searched for [existing issues](https://github.com/nhankyjangchan/koa-cors/issues).
+          value: ⚠️ **Before filling this form**, please ensure you've read the [documentation](https://github.com/nhankyjangchan/koa-cors) and searched for [existing issues](https://github.com/nhankyjangchan/koa-cors/issues).
 
     - type: textarea
       id: problem_description
@@ -24,9 +23,9 @@ body:
       attributes:
           label: Describe the solution you'd like
           description: A clear and concise description of what you want to happen.
-          placeholder: It would be great if the library could [...]
+          placeholder: It would be great if the plugin could [...]
       validations:
-          required: false
+          required: true
 
     - type: textarea
       id: feature_description
@@ -35,18 +34,18 @@ body:
           description: A clear and concise description of any alternative solutions or features you've considered.
           placeholder: I've tried to work around this by [...], but it's not ideal because [...]
       validations:
-          required: true
+          required: false
 
     - type: textarea
       id: feature_context
       attributes:
           label: Additional context
           description: Add any other context about the feature request here.
-          placeholder: Paste something here...
+          placeholder: Paste links, references, or examples here...
       validations:
           required: false
 
     - type: markdown
       id: feature_request-footer
       attributes:
-          value: 💙 Thanks for helping improve this package!
+          value: 💙 Thanks for helping improve this plugin!

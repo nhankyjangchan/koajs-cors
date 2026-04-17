@@ -1,6 +1,6 @@
 # @nhankyjangchan/koa-cors
 
-Previous name before v1.4.0 was [@nhankyjangchan/koajs-cors](https://www.npmjs.com/package/@nhankyjangchan/koajs-cors), which is now a legacy package
+> **📦 Formerly published as [@nhankyjangchan/koajs-cors](https://www.npmjs.com/package/@nhankyjangchan/koajs-cors), which is now a legacy package.** Instead of it, use **[current package](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)**
 
 [![npm version](https://img.shields.io/npm/v/%40nhankyjangchan%2Fkoa-cors?style=for-the-badge&logo=npm&color=blue)](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)
 [![github repo](https://img.shields.io/badge/github-repo-blue?logo=github&style=for-the-badge)](https://github.com/nhankyjangchan/koa-cors)
@@ -15,26 +15,25 @@ Previous name before v1.4.0 was [@nhankyjangchan/koajs-cors](https://www.npmjs.c
 
 Handles CORS requests by setting appropriate headers for both simple requests and preflight (OPTIONS) requests. Validates the `Origin` header against the configured whitelist and throws a 403 error for unauthorized origins. Throws a 500 error if the `origin` option is set to an invalid type.
 
-Automatically adds `Vary: Origin` header to all responses to ensure proper caching behaviour when different origins may receive different headers.
+Automatically adds a `Vary: Origin` header to all responses to ensure proper caching behaviour when different origins may receive different headers.
 
 **Features:**
 
-- Static or dynamic origin validation (string, array, or function)
+- Static or dynamic origin validation (string, array, or function, including async)
+- Automatic rejection of unauthorized origins (403) and invalid configuration (500)
 - Automatically adds `Vary: Origin` header for proper caching
-- Preflight request handling with proper method and header validation
-- Credentials support with automatic `*` to explicit origin conversion
-- Private Network Access support
-- Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy headers
-- Error handling with CORS header preservation
-- Conditional skipping of CORS processing
+- Preflight (OPTIONS) request handling with method and header validation
+- Configurable preflight caching via `Access-Control-Max-Age`
+- Automatic echo of `Access-Control-Request-Headers` when `allowHeaders` is not set
+- Credentials support with automatic `*` to explicit origin conversion (CORS spec compliance)
+- Private Network Access support (preflight requests from public to private networks)
+- Cross-Origin-Opener-Policy (`same-origin`) and Cross-Origin-Embedder-Policy (`require-corp`) headers
+- Error handling with CORS header preservation (`keepHeadersOnError`)
+- Conditional skipping of CORS processing (`shouldSkip`)
 
-## ⚠️ WARNING
+## ℹ️ Note
 
-> **Package Migration!**
->
-> This package was previously published as **`@nhankyjangchan/koajs-cors`**.
-> To get the latest features, bug fixes, and improvements, please switch to the new **`@nhankyjangchan/koa-cors`** package instead of legacy `@nhankyjangchan/koajs-cors`.
-> The legacy package is now in **maintenance mode** and will only receive critical security fixes beyond version `1.3.x`.
+> This package was previously published as **`@nhankyjangchan/koajs-cors`**. Starting with v1.4.0, this package has been migrated to a new name: **[@nhankyjangchan/koa-cors](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)**. If you're still using legacy **[@nhankyjangchan/koajs-cors](https://www.npmjs.com/package/@nhankyjangchan/koajs-cors)**, please migrate to new package — [it](https://www.npmjs.com/package/@nhankyjangchan/koajs-cors) is now deprecated and receives security fixes only. Migration is seamless, just install the **[new package](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)** and swap the package name in your `package.json` and import statements. The API remains unchanged.
 
 ## Installation
 
@@ -51,7 +50,7 @@ $ bun add @nhankyjangchan/koa-cors
 or for legacy package
 
 ```bash
-$ npm i @nhankyjangchan/koajs-cors@^1.1.0
+$ npm i @nhankyjangchan/koajs-cors
 ```
 
 ## Options
@@ -59,6 +58,7 @@ $ npm i @nhankyjangchan/koajs-cors@^1.1.0
 ```ts
 /**
  * CORS middleware configuration options.
+ * @see https://fetch.spec.whatwg.org/#http-cors-protocol
  */
 export interface Options {
     /**
@@ -70,24 +70,8 @@ export interface Options {
      * If the option is set to an invalid type, the request will be rejected with a 500.
      *
      * @default '*'
-     * @example
-     * // Static origin
-     * origin: 'https://example.com'
-     *
-     * // Whitelist of origins
-     * origin: ['https://example.com', 'https://another.com']
-     *
-     * // Dynamic origin resolution
-     * origin: (ctx) => {
-     *   const allowedOrigins = ['https://app.com', 'https://admin.app.com'];
-     *   return allowedOrigins.includes(ctx.get('Origin')) ? ctx.get('Origin') : '';
-     * }
-     *
-     * // Asynchronous origin resolution (e.g., database lookup)
-     * origin: async (ctx) => {
-     *   const domain = await db.domains.findOne({ url: ctx.get('Origin') });
-     *   return domain ? domain.url : '';
-     * }
+     * @see https://fetch.spec.whatwg.org/#http-cors-protocol
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
      */
     origin?: string | string[] | Plugin.ComputeOrigin;
 
@@ -95,18 +79,14 @@ export interface Options {
      * Configure the `Access-Control-Allow-Methods` header.
      *
      * @default ['HEAD', 'POST', 'GET', 'PATCH', 'PUT', 'DELETE']
-     * @example
-     * allowMethods: ['GET', 'POST']
-     * allowMethods: 'GET,POST,PUT'
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
      */
     allowMethods?: string | string[];
 
     /**
      * Configure the `Access-Control-Expose-Headers` header.
      *
-     * @example
-     * exposeHeaders: ['Content-Length', 'X-Custom-Header']
-     * exposeHeaders: 'Content-Length,X-Custom-Header'
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers
      */
     exposeHeaders?: string | string[];
 
@@ -114,19 +94,17 @@ export interface Options {
      * Configure the `Access-Control-Allow-Headers` header.
      * If not specified during preflight, the value of `Access-Control-Request-Headers` will be echoed back.
      *
-     * @example
-     * allowHeaders: ['Content-Type', 'Authorization']
-     * allowHeaders: 'Content-Type,Authorization,X-Requested-With'
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
      */
     allowHeaders?: string | string[];
 
     /**
      * Configure the `Access-Control-Max-Age` header (in seconds).
      * Specifies how long the results of a preflight request can be cached.
+     * If the value cannot be parsed as an integer, the header will be omitted.
      *
      * @default '3600'
-     * @example
-     * maxAge: '86400' // 24 hours
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age
      */
     maxAge?: string | number;
 
@@ -140,6 +118,8 @@ export interface Options {
      * request origin instead of `'*'` to comply with the CORS specification.
      *
      * @default false
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials
+     * @see https://fetch.spec.whatwg.org/#cors-protocol-and-credentials
      */
     credentials?: boolean | Plugin.Predicate;
 
@@ -152,7 +132,8 @@ export interface Options {
      * private networks (e.g., localhost, intranet) as per the Private Network Access specification.
      *
      * @default false
-     * @see https://developer.chrome.com/docs/web-platform/private-network-access/
+     * @see https://docs.cloud.google.com/service-directory/docs/private-network-access-overview
+     * @see https://developer.chrome.com/blog/private-network-access-preflight
      */
     privateNetworkAccess?: boolean;
 
@@ -202,18 +183,6 @@ export interface Options {
      * Set to `false` or not set anything to never skip CORS processing.
      *
      * @default false
-     * @example
-     * // Skip CORS for health check endpoint
-     * shouldSkip: (ctx) => ctx.path === '/health'
-     *
-     * // Skip CORS based on a header
-     * shouldSkip: (ctx) => ctx.get('X-Internal-Request') === 'true'
-     *
-     * // Asynchronous skip condition
-     * shouldSkip: async (ctx) => {
-     *   const isWhitelistedIP = await ipWhitelist.check(ctx.ip);
-     *   return isWhitelistedIP;
-     * }
      */
     shouldSkip?: false | Plugin.Predicate;
 }
@@ -246,7 +215,7 @@ const defaultOptions: Options = {
  */
 import koaCors from '@nhankyjangchan/koa-cors'; // ESM
 const koaCors = require('@nhankyjangchan/koa-cors').default; // CJS
-// For version before v1.4.0 use `@nhankyjangchan/koajs-cors`
+
 import type { Options } from '@nhankyjangchan/koa-cors';
 import type { Middleware } from 'koa';
 
