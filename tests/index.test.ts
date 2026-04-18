@@ -208,6 +208,23 @@ describe('CORS middleware', (): void => {
                         expect(res.headers['access-control-allow-origin']).toBeUndefined();
                     });
             });
+
+            it('should reject with 503', async (): Promise<void> => {
+                //@ts-ignore
+                app.use(cors({ origin: (): Set<void> => new Set() }));
+                app.use((ctx: Context): void => {
+                    ctx.body = { key: 'value' };
+                });
+
+                await request(app.callback())
+                    .get('/')
+                    .set('Origin', 'http://koajs.com')
+                    .expect(500)
+                    .expect((res: Response): void => {
+                        expect(res.header['vary']).toBeUndefined();
+                        expect(res.headers['access-control-allow-origin']).toBeUndefined();
+                    });
+            });
         });
 
         describe('origin is array', (): void => {

@@ -1,6 +1,6 @@
 {
     "name": "@nhankyjangchan/koa-cors",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "private": false,
     "description": "Cross-Origin Resource Sharing (CORS) middleware for KoaJS written in TypeScript",
     "keywords": [

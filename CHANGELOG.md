@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 The project adheres to [Semantic Versioning](https://semver.org).
 
+## **1.4.2** / 2026-04-18
+
+### Added
+
+- **Tests**: Added 1 new test case covering dynamic origin resolver returning a non-string value (`Set` object). The test verifies that the middleware correctly responds with a `500` status code and does not leak any CORS headers in the error response.
+
+### Changed
+
+- **Naming Refactor in Origin Resolver**: Internal resolution strategies within `createOriginResolver` have been renamed for improved semantic clarity:
+    - `matchOriginFromString` → **`matchExactOrigin`**: Better reflects the exact-match validation behavior for string-based origin configuration.
+    - `computeOrigin` → **`resolveDynamicOrigin`**: More accurately describes the resolution process for function-based origin configuration.
+    - `matchOriginFromArray` → **`matchOriginFromList`**: Clarifies that the function validates against a whitelist array of allowed origins.
+- **Error Handling Variable Naming**: Within the `try/catch` block for non-OPTIONS requests, local variables have been renamed for conciseness and readability:
+    - `baseVaryHeader` → **`baseVary`**: Shortened without loss of meaning.
+    - `mergedVaryHeader` → **`mergedVary`**: Shortened without loss of meaning.
+- **Dynamic Origin Type Safety**: The `resolveDynamicOrigin` function now includes an explicit type guard check (`typeof origin === 'string'`). If the user-provided resolver returns a non-string value, the middleware correctly throws a `500 Internal Server Error` instead of passing an invalid origin downstream, aligning with the error handling behavior introduced in v1.4.0 for invalid `origin` option types.
+- **Code Consistency**: Minor variable name adjustments in the error handling block to maintain consistent stylistic conventions across the codebase.
+
 ## **1.4.1** / 2026-04-17
 
 ### Info

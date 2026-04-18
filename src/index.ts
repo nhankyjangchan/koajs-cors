@@ -62,28 +62,28 @@ export default function cors(options: Options = {}): Middleware {
         const isOriginArray: boolean = Array.isArray(pluginOptions.origin);
 
         if (originType === 'string')
-            return matchOriginFromString;
+            return matchExactOrigin;
         else if (originType === 'function')
-            return computeOrigin;
+            return resolveDynamicOrigin;
         else if (isOriginArray)
-            return matchOriginFromArray;
+            return matchOriginFromList;
         else return rejectRequest;
 
-        function matchOriginFromString(ctx: Context, requestOrigin: string): string {
+        function matchExactOrigin(ctx: Context, requestOrigin: string): string {
             if (pluginOptions.origin !== requestOrigin && pluginOptions.origin !== '*')
                 ctx.throw(403);
             return pluginOptions.origin as string;
         }
 
-        async function computeOrigin(ctx: Context): Promise<string> {
-            const origin: string = await (pluginOptions.origin as Function)(ctx);
+        async function resolveDynamicOrigin(ctx: Context): Promise<string> {
+            const origin: unknown = await (pluginOptions.origin as Function)(ctx);
             if (!origin)
                 ctx.throw(403);
-            return origin;
+            return typeof origin === 'string' ? origin : ctx.throw(500);
         }
 
-        function matchOriginFromArray(ctx: Context, requestOrigin: string): string {
-            if (!(pluginOptions.origin as Array<string>).includes(requestOrigin!))
+        function matchOriginFromList(ctx: Context, requestOrigin: string): string {
+            if (!(pluginOptions.origin as Array<string>).includes(requestOrigin))
                 ctx.throw(403);
             return requestOrigin as string;
         }
@@ -155,21 +155,21 @@ export default function cors(options: Options = {}): Middleware {
 
             try {
                 return await next();
-            } catch (err: unknown) {
-                const headersFromError: Plugin.Headers = (err as HttpError)?.headers || {};
-                const baseVaryHeader: string = headersFromError['Vary'] || headersFromError['vary'] || '';
-                const mergedVaryHeader: string = append(baseVaryHeader, 'Origin');
+            } catch (error: unknown) {
+                const headersFromError: Plugin.Headers = (error as HttpError)?.headers || {};
+                const baseVary: string = headersFromError['Vary'] || headersFromError['vary'] || '';
+                const mergedVary: string = append(baseVary, 'Origin');
 
                 delete headersFromError['Vary'];
                 delete headersFromError['vary'];
 
-                (err as HttpError).headers = {
+                (error as HttpError).headers = {
                     ...headersFromError,
                     ...corsHeaders,
-                    vary: mergedVaryHeader
+                    vary: mergedVary
                 };
 
-                throw err;
+                throw error;
             }
         } else {
             const requestedMethod: string = ctx.get('Access-Control-Request-Method');
