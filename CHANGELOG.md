@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 The project adheres to [Semantic Versioning](https://semver.org).
 
+## **1.4.4** / 2026-04-30
+
+### Info
+
+- **No Functional Changes**: This release includes only documentation and metadata improvements. The middleware logic, public API, and test suite remain unchanged from v1.4.2.
+
+### Changed
+
+- **Documentation**: Updated `README.md` with improved visual hierarchy and readability. Added coverage and test count badges to the header section. The "Installation" section now includes a note about installing `@types/koa` for TypeScript users, and the legacy package installation instruction has been removed to reduce clutter and guide users toward the current package only.
+- **Development Dependencies**: Updated `typescript` from `^6.0.2` to `^6.0.3` in `devDependencies`.
+
 ## **1.4.3** / 2026-04-21
 
 ### Info
