@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 The project adheres to [Semantic Versioning](https://semver.org).
 
+## **2.0.1** / 2026-05-17
+
+### Fixed
+
+- **Type Definitions**: Added the missing `export default cors` declaration in `index.d.ts`. In v2.0.0, the named `export function cors` was present but the default export was accidentally omitted, causing TypeScript compilation errors for consumers using `import cors from '@nhankyjangchan/koa-cors'` with `esModuleInterop` or `allowSyntheticDefaultImports` enabled. The dual-export pattern (`export function cors` + `export default cors`) introduced in v2.0.0 is now fully functional for both default and named imports.
+
 ## **2.0.0** / 2026-05-17
 
 ### Info
