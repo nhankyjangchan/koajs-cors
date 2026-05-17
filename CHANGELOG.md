@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 The project adheres to [Semantic Versioning](https://semver.org).
 
+## **2.0.0** / 2026-05-17
+
+### Info
+
+- **Breaking Change**: The `origin` option now uses `Set<string>` instead of `string[]` for whitelist-based origin validation. Arrays are no longer accepted. Users migrating from previous versions must replace `origin: ['https://example.com', 'https://another.com']` with `origin: new Set(['https://example.com', 'https://another.com'])`.
+- **Breaking Change**: Minimum supported Node.js version has been raised from `>=20` to `>=22`, and npm from `>=8` to `>=10`. This reflects the end-of-life status of older Node.js and npm releases and allows the package to leverage modern runtime features.
+- **Build Output**: The CommonJS and ESM build artifacts are no longer minified. This improves debuggability and readability of the distributed code, making stack traces and error inspection significantly easier in production environments without relying on source maps.
+- **Package Metadata**: Updated the `keywords` array in `package.json` to include the current and legacy package names (`@nhankyjangchan/koa-cors`, `@nhankyjangchan/koajs-cors`). This change affects only npm search indexing and does not impact the middleware's functional logic.
+
+### Changed
+
+- **Origin Whitelist Type**: The `origin` option in the `Options` interface now accepts `Set<string>` instead of `string[]` for whitelist-based origin validation. The internal `matchOriginFromList` resolver uses `Set.prototype.has()` for O(1) lookups, replacing the previous `Array.prototype.includes()` O(n) scan. This significantly improves performance for large origin whitelists and provides stronger typing semantics.
+- **Export Pattern**: The function export style in the source code has been changed from `export default function cors()` to a separate named `export function cors()` paired with `export default cors`. This dual-export pattern allows consumers to import the middleware via both `import cors from '...'` (default) and `import { cors } from '...'` (named), providing greater flexibility for various module systems and coding conventions.
+- **Type Definitions**: Updated `origin` type in `index.d.ts` from `string | string[] | Plugin.ComputeOrigin` to `string | Set<string> | Plugin.ComputeOrigin`. JSDoc examples and descriptions have been updated to reflect the new `Set`-based whitelist usage.
+- **Documentation**: Updated `README.md` to reflect the `Set<string>` type for the `origin` option. The "Features" section and option descriptions now correctly reference `Set` instead of array-based whitelists.
+- **Tests**: Updated all test cases that previously used arrays for the `origin` option to use `Set` instances. The invalid origin type test now passes an array `['invalid']` to verify that the middleware correctly responds with `500` for unsupported types (arrays are no longer valid). The dynamic origin resolver test for non-string return values now uses an array `['invalid']` instead of a `Set` object to test the type-guard rejection path, while keeping the `Set` test for the new valid whitelist use case. All 51 tests continue to pass.
+
+### Removed
+
+- **Package Legacy Entry Points**: The `types`, `module`, and `main` fields have been removed from `package.json`. Module resolution is now handled exclusively through the `exports` map, which provides a cleaner and more modern approach to defining package entry points for different module systems (ESM, CJS, and TypeScript declarations).
+
 ## **1.4.4** / 2026-04-30
 
 ### Info

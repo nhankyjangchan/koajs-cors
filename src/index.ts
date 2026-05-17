@@ -3,7 +3,7 @@ import type { HttpError } from 'http-errors';
 import type { Context, Next, Middleware } from 'koa';
 
 export interface Options {
-    origin?: string | string[] | Plugin.ComputeOrigin;
+    origin?: string | Set<string> | Plugin.ComputeOrigin;
     allowMethods?: string | string[];
     exposeHeaders?: string | string[];
     allowHeaders?: string | string[];
@@ -23,7 +23,7 @@ export namespace Plugin {
     export type Headers = Record<string, string>;
 }
 
-export default function cors(options: Options = {}): Middleware {
+export function cors(options: Options = {}): Middleware {
     const defaultOptions: Options = {
         origin: '*',
         allowMethods: ['HEAD', 'POST', 'GET', 'PATCH', 'PUT', 'DELETE'],
@@ -59,13 +59,13 @@ export default function cors(options: Options = {}): Middleware {
 
     function createOriginResolver(): Plugin.OriginResolver {
         const originType: string = typeof pluginOptions.origin;
-        const isOriginArray: boolean = Array.isArray(pluginOptions.origin);
+        const isOriginSet: boolean = pluginOptions.origin instanceof Set;
 
         if (originType === 'string')
             return matchExactOrigin;
         else if (originType === 'function')
             return resolveDynamicOrigin;
-        else if (isOriginArray)
+        else if (isOriginSet)
             return matchOriginFromList;
         else return rejectRequest;
 
@@ -83,7 +83,7 @@ export default function cors(options: Options = {}): Middleware {
         }
 
         function matchOriginFromList(ctx: Context, requestOrigin: string): string {
-            if (!(pluginOptions.origin as Array<string>).includes(requestOrigin))
+            if (!(pluginOptions.origin as Set<string>).has(requestOrigin))
                 ctx.throw(403);
             return requestOrigin as string;
         }
@@ -206,3 +206,5 @@ export default function cors(options: Options = {}): Middleware {
         }
     };
 }
+
+export default cors;

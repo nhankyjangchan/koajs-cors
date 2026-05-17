@@ -60,12 +60,14 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # ============================================
 # TEMPORARY & CACHE
 # ============================================
-*.cache
 .cache/
-.eslintcache
+cache/
 .temp/
-tmp/
 temp/
+.tmp/
+tmp/
+*.cache
+.eslintcache
 
 # ============================================
 # TESTING & COVERAGE
@@ -88,7 +90,7 @@ pids/
 # IDE & EDITORS
 # ============================================
 # VSCode
-.vscode/*
+.vscode/
 !.vscode/settings.json
 !.vscode/extensions.json
 !.vscode/tasks.json

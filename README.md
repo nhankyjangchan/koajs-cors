@@ -17,11 +17,11 @@
 
 Handles CORS requests by setting appropriate headers for both simple requests and preflight (OPTIONS) requests. Validates the `Origin` header against the configured whitelist and throws a 403 error for unauthorized origins. Throws a 500 error if the `origin` option is set to an invalid type.
 
-Automatically adds a `Vary: Origin` header to all responses to ensure proper caching behaviour when different origins may receive different headers.
+Automatically adds `Vary: Origin` header to all responses to ensure proper caching behaviour when different origins may receive different headers.
 
 ## ✨ Features
 
-- Static or dynamic origin validation (string, array, or function, including async)
+- Static or dynamic origin validation (string, Set, or function, including async)
 - Automatic rejection of unauthorized origins (403) and invalid configuration (500)
 - Automatically adds `Vary: Origin` header for proper caching
 - Preflight (OPTIONS) request handling with method and header validation
@@ -66,7 +66,7 @@ export interface Options {
     /**
      * Configure the `Access-Control-Allow-Origin` header.
      *
-     * Accepts a static string, an array of allowed origins, or a function for dynamic resolution.
+     * Accepts a static string, a list (Set) of allowed origins, or a function for dynamic resolution.
      * The function receives the Koa context and may return a string or a Promise resolving to a string.
      * If the function returns a falsy value (empty string, `null`, `undefined`), the request will be rejected with a 403.
      * If the option is set to an invalid type, the request will be rejected with a 500.
@@ -75,7 +75,7 @@ export interface Options {
      * @see https://fetch.spec.whatwg.org/#http-cors-protocol
      * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
      */
-    origin?: string | string[] | Plugin.ComputeOrigin;
+    origin?: string | Set<string> | Plugin.ComputeOrigin;
 
     /**
      * Configure the `Access-Control-Allow-Methods` header.
@@ -136,6 +136,7 @@ export interface Options {
      * @default false
      * @see https://docs.cloud.google.com/service-directory/docs/private-network-access-overview
      * @see https://developer.chrome.com/blog/private-network-access-preflight
+     * @see https://wicg.github.io/private-network-access
      */
     privateNetworkAccess?: boolean;
 
@@ -216,7 +217,7 @@ const defaultOptions: Options = {
  * File `src/plugins/cors.plugin.ts`.
  */
 import koaCors from '@nhankyjangchan/koa-cors'; // ESM
-const koaCors = require('@nhankyjangchan/koa-cors').default; // CJS
+const { cors: koaCors } = require('@nhankyjangchan/koa-cors'); // CJS
 
 import type { Options } from '@nhankyjangchan/koa-cors';
 import type { Middleware } from 'koa';

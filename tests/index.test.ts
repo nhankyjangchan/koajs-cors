@@ -211,7 +211,7 @@ describe('CORS middleware', (): void => {
 
             it('should reject with 503', async (): Promise<void> => {
                 //@ts-ignore
-                app.use(cors({ origin: (): Set<void> => new Set() }));
+                app.use(cors({ origin: (): string[] => ['invalid'] }));
                 app.use((ctx: Context): void => {
                     ctx.body = { key: 'value' };
                 });
@@ -227,9 +227,11 @@ describe('CORS middleware', (): void => {
             });
         });
 
-        describe('origin is array', (): void => {
+        describe('origin is Set', (): void => {
             it('should set `Access-Control-Allow-Origin` to the origin when matches allowed list', async (): Promise<void> => {
-                app.use(cors({ origin: ['https://allowed1.com', 'http://koajs.com'] }));
+                app.use(
+                    cors({ origin: new Set(['https://allowed1.com', 'http://koajs.com']) })
+                );
                 app.use((ctx: Context): void => {
                     ctx.body = { key: 'value' };
                 });
@@ -244,7 +246,9 @@ describe('CORS middleware', (): void => {
             });
 
             it('should not set `Access-Control-Allow-Origin` when Origin not in allowed list', async (): Promise<void> => {
-                app.use(cors({ origin: ['https://allowed1.com', 'http://koajs.com'] }));
+                app.use(
+                    cors({ origin: new Set(['https://allowed1.com', 'http://koajs.com']) })
+                );
                 app.use((ctx: Context): void => {
                     ctx.body = { key: 'value' };
                 });
@@ -263,7 +267,7 @@ describe('CORS middleware', (): void => {
         describe('invalid origin type', (): void => {
             it('should return 500 when Origin type is invalid', async (): Promise<void> => {
                 // @ts-ignore
-                app.use(cors({ origin: new Set() }));
+                app.use(cors({ origin: ['invalid'] }));
                 app.use((ctx: Context): void => {
                     ctx.body = { key: 'value' };
                 });
