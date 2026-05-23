@@ -3,6 +3,37 @@
 All notable changes to this project will be documented in this file.
 The project adheres to [Semantic Versioning](https://semver.org).
 
+## **2.1.0** / 2026-05-23
+
+### Info
+
+- **No Dependency on `vary`**: The package no longer depends on the external `vary` package for HTTP `Vary` header manipulation. The merging logic has been internalised into a dedicated `mergeVaryWithOrigin` utility, reducing the dependency footprint and allowing stricter control over header merging behaviour.
+- **Build Output Structure**: Compiled artifacts are now organised into subdirectories within `dist/`:
+    - `dist/esm/` — ECMAScript modules
+    - `dist/cjs/` — CommonJS modules
+    - `dist/types/` — TypeScript declaration files
+- **Dual Export**: The middleware now supports both default and named imports in ESM (`import cors` and `import { cors }`), and both `require('...')` and `require('...').cors` in CJS, providing greater flexibility for various module systems.
+
+### Added
+
+- **`mergeVaryWithOrigin` Utility**: Added a standalone utility function for merging the `Origin` field name into existing `Vary` header values. The function correctly handles the `Vary: *` wildcard (returning `*` as-is), deduplicates `Origin` in a case-insensitive manner, preserves the original field name order with `Origin` always placed first, and safely stringifies non-string inputs.
+- **Tests**: Added 7 new test cases for the `mergeVaryWithOrigin` utility, covering wildcard handling, empty input, field name deduplication, case-insensitive matching, multiple field names, and non-string input coercion. Total test suite now passes 58 out of 58 tests.
+
+### Changed
+
+- **`Vary` Header Merging in Error Handling**: The `try/catch` block for non-OPTIONS requests now uses the internal `mergeVaryWithOrigin` function instead of the `append` helper from the `vary` package. This change is functionally transparent — `Vary` header merging behaviour remains consistent — but eliminates the external dependency.
+- **Build Scripts**: Updated Bun build commands to use `--outdir` with `--entry-naming` instead of `--outfile`, and `--packages external` instead of `--external '*'`. This produces the new subdirectory-based output structure (`dist/esm/`, `dist/cjs/`, `dist/types/`).
+- **Package Exports Map**: Updated `exports` paths in `package.json` to reflect the new subdirectory structure:
+    - `types`: `./dist/index.d.ts` → `./dist/types/index.d.ts`
+    - `import`: `./dist/index.mjs` → `./dist/esm/index.mjs`
+    - `require`: `./dist/index.cjs` → `./dist/cjs/index.cjs`
+- **Dependency Versions**: Updated `@types/koa` from `^3.0.2` to `^3.0.3` and `koa` from `^3.2.0` to `^3.2.1` in `devDependencies`.
+- **Import Style in Tests**: Updated import from `import cors from '../src/index.js'` to `import { cors } from '../src/index.ts'` to use the named export and TypeScript source directly.
+
+### Removed
+
+- **`vary` Dependency**: Removed the `vary` package from `dependencies` and `@types/vary` from `devDependencies`.
+
 ## **2.0.1** / 2026-05-17
 
 ### Fixed

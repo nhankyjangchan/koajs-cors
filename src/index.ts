@@ -1,4 +1,4 @@
-import { append } from 'vary';
+import { mergeVaryWithOrigin } from './lib/mergeVaryWithOrigin.ts';
 import type { HttpError } from 'http-errors';
 import type { Context, Next, Middleware } from 'koa';
 
@@ -158,7 +158,7 @@ export function cors(options: Options = {}): Middleware {
             } catch (error: unknown) {
                 const headersFromError: Plugin.Headers = (error as HttpError)?.headers || {};
                 const baseVary: string = headersFromError['Vary'] || headersFromError['vary'] || '';
-                const mergedVary: string = append(baseVary, 'Origin');
+                const mergedVary: string = mergeVaryWithOrigin(baseVary);
 
                 delete headersFromError['Vary'];
                 delete headersFromError['vary'];

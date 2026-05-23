@@ -10,8 +10,10 @@ The latest minor version receives active maintenance. The previous minor version
 
 | Version | Supported          | Notes               |
 | ------- | ------------------ | ------------------- |
-| 1.4.x   | :white_check_mark: | Active maintenance  |
-| 1.3.x   | :white_check_mark: | Security fixes only |
+| 2.1.x   | :white_check_mark: | Active maintenance  |
+| 2.0.x   | :x:                | No longer supported |
+| 1.4.x   | :white_check_mark: | Security fixes only |
+| 1.3.x   | :x:                | No longer supported |
 | 1.2.x   | :x:                | No longer supported |
 | 1.1.x   | :x:                | No longer supported |
 | 1.0.x   | :x:                | No longer supported |

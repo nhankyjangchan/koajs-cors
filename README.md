@@ -4,10 +4,10 @@
 
 [![npm version](https://img.shields.io/npm/v/%40nhankyjangchan%2Fkoa-cors?style=for-the-badge&logo=npm&color=blue)](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)
 [![github repo](https://img.shields.io/badge/github-repo-blue?logo=github&style=for-the-badge)](https://github.com/nhankyjangchan/koa-cors)
-[![node version](https://img.shields.io/badge/node.js-%3E%3Dv20-yellow?logo=nodedotjs&style=for-the-badge)](https://nodejs.org/en/download)
+[![node version](https://img.shields.io/badge/node.js-%3E%3Dv22-yellow?logo=nodedotjs&style=for-the-badge)](https://nodejs.org/en/download)
 [![bun version](https://img.shields.io/badge/bun-%3E%3Dv1.3-yellow?logo=bun&style=for-the-badge)](https://bun.com/)
 [![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=for-the-badge)](https://github.com/nhankyjangchan/koa-cors#-tests)
-[![tests](https://img.shields.io/badge/tests-51%2F51-brightgreen?style=for-the-badge)](https://github.com/nhankyjangchan/koa-cors#-tests)
+[![tests](https://img.shields.io/badge/tests-58%2F58-brightgreen?style=for-the-badge)](https://github.com/nhankyjangchan/koa-cors#-tests)
 [![npm downloads](https://img.shields.io/npm/dm/%40nhankyjangchan%2Fkoa-cors?style=for-the-badge&color=lightgreen)](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)
 [![unpacked Size](https://img.shields.io/npm/unpacked-size/%40nhankyjangchan%2Fkoa-cors?style=for-the-badge&color=lightgreen)](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)
 [![last update](https://img.shields.io/npm/last-update/%40nhankyjangchan%2Fkoa-cors?style=for-the-badge&color=lightgreen)](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)
@@ -32,6 +32,7 @@ Automatically adds `Vary: Origin` header to all responses to ensure proper cachi
 - Cross-Origin-Opener-Policy (`same-origin`) and Cross-Origin-Embedder-Policy (`require-corp`) headers
 - Error handling with CORS header preservation (`keepHeadersOnError`)
 - Conditional skipping of CORS processing (`shouldSkip`)
+- Zero external dependencies
 
 ## ℹ️ Note
 
@@ -49,7 +50,7 @@ or
 $ bun add @nhankyjangchan/koa-cors
 ```
 
-and if you use TS, don't forget to set the types for Koa
+and if you use TS, don't forget to install types for Koa
 
 ```bash
 $ npm i -D @types/koa

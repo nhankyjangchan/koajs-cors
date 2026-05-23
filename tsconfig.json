@@ -39,7 +39,7 @@
         "declarationDir": null,
         "declarationMap": false,
         "emitBOM": false,
-        "emitDeclarationOnly": false,
+        "emitDeclarationOnly": true,
         "importHelpers": true,
         "inlineSourceMap": false,
         "inlineSources": true,
@@ -51,7 +51,7 @@
         "preserveConstEnums": true,
         "removeComments": true,
         "sourceMap": true,
-        "stripInternal": false,
+        "stripInternal": true,
         "allowJs": false,
         "checkJs": false,
         "maxNodeModuleJsDepth": 4,
@@ -84,6 +84,6 @@
         "pretty": true,
         "skipLibCheck": true
     },
-    "include": ["src/**/*.ts"],
-    "exclude": ["node_modules", "build"]
+    "include": ["src/index.ts"],
+    "exclude": ["node_modules", "dist"]
 }
