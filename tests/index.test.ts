@@ -1,6 +1,6 @@
 import request from 'supertest';
 import Koa from 'koa';
-import cors from '../src/index.js';
+import { cors } from '../src/index.ts';
 import type { Context, Next } from 'koa';
 import type { Response } from 'supertest';
 
