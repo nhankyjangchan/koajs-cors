@@ -1,43 +1,14 @@
-import { mergeVaryWithOrigin } from './lib/mergeVaryWithOrigin.ts';
-import type { HttpError } from 'http-errors';
+import { defaultPluginOptions } from './lib/options/defaultPluginOptions.ts';
+import { createOriginResolver } from './lib/resolvers/createOriginResolver.ts';
+import { createCredentialsResolver } from './lib/resolvers/createCredentialsResolver.ts';
+import { normalizeMaxAge } from './lib/utils/normalizeMaxAge.ts';
+import { mergeErrorHeaders } from './lib/utils/mergeErrorHeaders.ts';
+import type { Options, Plugin } from './_types/pluginTypes.ts';
 import type { Context, Next, Middleware } from 'koa';
 
-export interface Options {
-    origin?: string | Set<string> | Plugin.ComputeOrigin;
-    allowMethods?: string | string[];
-    exposeHeaders?: string | string[];
-    allowHeaders?: string | string[];
-    maxAge?: string | number;
-    credentials?: boolean | Plugin.Predicate;
-    privateNetworkAccess?: boolean;
-    originOpenerPolicy?: boolean;
-    originEmbedderPolicy?: boolean;
-    keepHeadersOnError?: boolean;
-    shouldSkip?: false | Plugin.Predicate;
-}
-
-export namespace Plugin {
-    export type ComputeOrigin = (ctx: Context) => string | Promise<string>;
-    export type Predicate = (ctx: Context) => boolean | Promise<boolean>;
-    export type OriginResolver = (ctx: Context, requestOrigin: string) => string | Promise<string>;
-    export type Headers = Record<string, string>;
-}
-
 export function cors(options: Options = {}): Middleware {
-    const defaultOptions: Options = {
-        origin: '*',
-        allowMethods: ['HEAD', 'POST', 'GET', 'PATCH', 'PUT', 'DELETE'],
-        maxAge: '3600',
-        credentials: false,
-        privateNetworkAccess: false,
-        originOpenerPolicy: false,
-        originEmbedderPolicy: false,
-        keepHeadersOnError: true,
-        shouldSkip: false
-    };
-
     const pluginOptions: Options = {
-        ...defaultOptions,
+        ...defaultPluginOptions,
         ...options
     };
 
@@ -50,63 +21,10 @@ export function cors(options: Options = {}): Middleware {
     if (Array.isArray(pluginOptions.allowHeaders))
         pluginOptions.allowHeaders = pluginOptions.allowHeaders.join(',');
 
-    const maxAge: string | null = Number.isInteger(+pluginOptions.maxAge!)
-        ? String(pluginOptions.maxAge)
-        : null;
+    const resolveOrigin: Plugin.OriginResolver = createOriginResolver(pluginOptions);
+    const resolveCredentials: Plugin.Predicate = createCredentialsResolver(pluginOptions);
 
-    const resolveOrigin: Plugin.OriginResolver = createOriginResolver();
-    const resolveCredentials: Plugin.Predicate = createCredentialsResolver();
-
-    function createOriginResolver(): Plugin.OriginResolver {
-        const originType: string = typeof pluginOptions.origin;
-        const isOriginSet: boolean = pluginOptions.origin instanceof Set;
-
-        if (originType === 'string')
-            return matchExactOrigin;
-        else if (originType === 'function')
-            return resolveDynamicOrigin;
-        else if (isOriginSet)
-            return matchOriginFromList;
-        else return rejectRequest;
-
-        function matchExactOrigin(ctx: Context, requestOrigin: string): string {
-            if (pluginOptions.origin !== requestOrigin && pluginOptions.origin !== '*')
-                ctx.throw(403);
-            return pluginOptions.origin as string;
-        }
-
-        async function resolveDynamicOrigin(ctx: Context): Promise<string> {
-            const origin: unknown = await (pluginOptions.origin as Function)(ctx);
-            if (!origin)
-                ctx.throw(403);
-            return typeof origin === 'string' ? origin : ctx.throw(500);
-        }
-
-        function matchOriginFromList(ctx: Context, requestOrigin: string): string {
-            if (!(pluginOptions.origin as Set<string>).has(requestOrigin))
-                ctx.throw(403);
-            return requestOrigin as string;
-        }
-
-        function rejectRequest(ctx: Context): never {
-            ctx.throw(500);
-        }
-    }
-
-    function createCredentialsResolver(): Plugin.Predicate {
-        if (typeof pluginOptions.credentials === 'function')
-            return computeCredentials;
-        return staticCredentials;
-
-        async function computeCredentials(ctx: Context): Promise<boolean> {
-            return await (pluginOptions.credentials as Plugin.Predicate)(ctx);
-        }
-
-        function staticCredentials(): boolean {
-            return pluginOptions.credentials as boolean;
-        }
-    }
-
+    const maxAge: string | null = normalizeMaxAge(+pluginOptions.maxAge!);
     const isShouldSkipFunction: boolean = typeof pluginOptions.shouldSkip === 'function';
 
     return async function (ctx: Context, next: Next): Promise<void> {
@@ -123,7 +41,7 @@ export function cors(options: Options = {}): Middleware {
         }
 
         let origin: string = await resolveOrigin(ctx, requestOrigin);
-        let credentials: boolean = await resolveCredentials(ctx);
+        const credentials: boolean = await resolveCredentials(ctx);
 
         if (credentials && origin === '*')
             origin = requestOrigin;
@@ -156,20 +74,7 @@ export function cors(options: Options = {}): Middleware {
             try {
                 return await next();
             } catch (error: unknown) {
-                const headersFromError: Plugin.Headers = (error as HttpError)?.headers || {};
-                const baseVary: string = headersFromError['Vary'] || headersFromError['vary'] || '';
-                const mergedVary: string = mergeVaryWithOrigin(baseVary);
-
-                delete headersFromError['Vary'];
-                delete headersFromError['vary'];
-
-                (error as HttpError).headers = {
-                    ...headersFromError,
-                    ...corsHeaders,
-                    vary: mergedVary
-                };
-
-                throw error;
+                throw mergeErrorHeaders(error, corsHeaders);
             }
         } else {
             const requestedMethod: string = ctx.get('Access-Control-Request-Method');
