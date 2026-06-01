@@ -7,7 +7,7 @@
 [![node version](https://img.shields.io/badge/node.js-%3E%3Dv22-yellow?logo=nodedotjs&style=for-the-badge)](https://nodejs.org/en/download)
 [![bun version](https://img.shields.io/badge/bun-%3E%3Dv1.3-yellow?logo=bun&style=for-the-badge)](https://bun.com/)
 [![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=for-the-badge)](https://github.com/nhankyjangchan/koa-cors#-tests)
-[![tests](https://img.shields.io/badge/tests-58%2F58-brightgreen?style=for-the-badge)](https://github.com/nhankyjangchan/koa-cors#-tests)
+[![tests](https://img.shields.io/badge/tests-62%2F62-brightgreen?style=for-the-badge)](https://github.com/nhankyjangchan/koa-cors#-tests)
 [![npm downloads](https://img.shields.io/npm/dm/%40nhankyjangchan%2Fkoa-cors?style=for-the-badge&color=lightgreen)](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)
 [![unpacked Size](https://img.shields.io/npm/unpacked-size/%40nhankyjangchan%2Fkoa-cors?style=for-the-badge&color=lightgreen)](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)
 [![last update](https://img.shields.io/npm/last-update/%40nhankyjangchan%2Fkoa-cors?style=for-the-badge&color=lightgreen)](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)

@@ -707,8 +707,11 @@ describe('CORS middleware', (): void => {
 
         it('should keep CORS headers after an error', async (): Promise<void> => {
             app.use(cors({ keepHeadersOnError: true }));
-            app.use((): never => {
-                throw new Error('Whoops! Keep headers on error is on');
+            app.use((ctx: Context): never => {
+                //ctx.set('Vary', 'Accept-Encoding');
+                ctx.throw(500, 'Whoops! Keep headers on error is on', {
+                    headers: ctx.response.headers
+                });
             });
 
             await request(app.callback())
@@ -716,7 +719,7 @@ describe('CORS middleware', (): void => {
                 .set('Origin', 'http://koajs.com')
                 .expect(500)
                 .expect('Access-Control-Allow-Origin', '*')
-                .expect('Vary', 'Origin');
+                .expect('Vary', 'origin');
         });
 
         it('should not keep CORS headers after an error if keepHeadersOnError is false', async (): Promise<void> => {

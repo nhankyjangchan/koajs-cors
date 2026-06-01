@@ -3,6 +3,38 @@
 All notable changes to this project will be documented in this file.
 The project adheres to [Semantic Versioning](https://semver.org).
 
+## **2.1.1** / 2026-06-01
+
+### Info
+
+- **Module Extraction**: Core logic previously inlined within `index.ts` has been extracted into dedicated, single-responsibility modules under `src/lib/`, improving maintainability, testability, and separation of concerns:
+    - `src/_types/pluginTypes.ts` — `Options` interface and `Plugin` namespace with all internal types
+    - `src/lib/options/defaultPluginOptions.ts` — default configuration values
+    - `src/lib/resolvers/createOriginResolver.ts` — origin validation strategy factory
+    - `src/lib/resolvers/createCredentialsResolver.ts` — credentials resolution strategy factory
+    - `src/lib/utils/normalizeMaxAge.ts` — `maxAge` validation and normalisation
+    - `src/lib/utils/mergeErrorHeaders.ts` — CORS header attachment for thrown errors
+
+### Added
+
+- **`normalizeMaxAge` Utility**: Added a standalone utility function for validating and normalising the `maxAge` option. The function accepts a number, returns its string representation for valid integer values, and returns `null` for floats, `NaN`, and non-numeric inputs. This replaces the previous inline ternary expression in `index.ts`.
+- **`mergeErrorHeaders` Utility**: Extracted the error-time CORS header attachment logic from the `try/catch` block into a dedicated `mergeErrorHeaders` function. The function merges CORS response headers into the thrown error's `headers` property, normalises the `Vary` header via `mergeVaryWithOrigin`, and removes duplicate `Vary`/`vary` keys. It returns the error cast to `Plugin.E` for consistent typing.
+- **Tests**: Added 3 new test cases for the `normalizeMaxAge` utility covering integer input, float input, and non-numeric input. Added 1 new test case for `mergeVaryWithOrigin` verifying lowercase normalisation of all field names (e.g., `X-Api, X-Vue-App` → `origin, x-api, x-vue-app`). Updated the existing 7 `mergeVaryWithOrigin` tests to expect lowercase output throughout (e.g., `Origin` → `origin`, `[object Object]` → `[object object]`). Total test suite now passes **62 out of 62 tests** across 3 files, with **100% code coverage** across all 7 source modules.
+
+### Changed
+
+- **`mergeVaryWithOrigin` Lowercase Normalisation**: The function now converts all `Vary` field names to lowercase before deduplication and output. This guarantees complete deduplication regardless of header name casing (e.g., `Origin, ORIGIN, origin` now correctly collapses to `origin`), fully leveraging the case-insensitive nature of HTTP header field names. Previously, field names were preserved in their original casing with only case-insensitive `Origin` deduplication; other duplicate field names differing in case could appear multiple times in the output.
+- **`maxAge` Normalisation**: Replaced the inline expression `Number.isInteger(+pluginOptions.maxAge!) ? String(pluginOptions.maxAge) : null` with a call to the extracted `normalizeMaxAge` utility function.
+- **Error Handling in `try/catch` Block**: The inline error header merging logic within the `catch` clause has been delegated to the new `mergeErrorHeaders` utility function. The `catch` block now simply calls `throw mergeErrorHeaders(error, corsHeaders)`, reducing indentation depth and improving readability of the middleware's main request processing path.
+- **Type Definitions Location**: The `Options` interface and `Plugin` namespace have been moved from `index.ts` into a dedicated `src/_types/pluginTypes.ts` file. `index.ts` now imports these types, keeping the main module focused on the middleware factory function.
+- **Default Options Location**: The `defaultOptions` constant has been moved from the `cors` function body in `index.ts` into a dedicated `src/lib/options/defaultPluginOptions.ts` module, removing it from the hot path visual scope.
+- **Resolver Factories Location**: The `createOriginResolver` and `createCredentialsResolver` factory functions have been extracted from the `cors` function body into their own modules under `src/lib/resolvers/`. These are now imported and invoked at the top of the middleware factory function, preserving the same closure-based pre-computation strategy.
+- **`credentials` Variable Immutability**: The `credentials` variable in the middleware closure is now declared with `const` instead of `let`, reflecting that its value is never reassigned after the initial `await resolveCredentials(ctx)` call.
+
+### Removed
+
+- **`@types/http-errors` Dependency**: Removed the `@types/http-errors` package from dev dependencies. Error objects are now typed using the custom `Plugin.E` interface, eliminating all references to `HttpError`.
+
 ## **2.1.0** / 2026-05-23
 
 ### Info

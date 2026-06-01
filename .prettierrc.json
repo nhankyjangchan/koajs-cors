@@ -11,5 +11,9 @@
     "bracketSpacing": true,
     "objectWrap": "preserve",
     "arrowParens": "always",
+    "requirePragma": false,
+    "insertPragma": false,
+    "checkIgnorePragma": false,
+    "proseWrap": "preserve",
     "endOfLine": "lf"
 }
