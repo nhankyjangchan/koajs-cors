@@ -7,7 +7,7 @@
 [![node version](https://img.shields.io/badge/node.js-%3E%3Dv22-yellow?logo=nodedotjs&style=for-the-badge)](https://nodejs.org/en/download)
 [![bun version](https://img.shields.io/badge/bun-%3E%3Dv1.3-yellow?logo=bun&style=for-the-badge)](https://bun.com/)
 [![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=for-the-badge)](https://github.com/nhankyjangchan/koa-cors#-tests)
-[![tests](https://img.shields.io/badge/tests-62%2F62-brightgreen?style=for-the-badge)](https://github.com/nhankyjangchan/koa-cors#-tests)
+[![tests](https://img.shields.io/badge/tests-76%2F76-brightgreen?style=for-the-badge)](https://github.com/nhankyjangchan/koa-cors#-tests)
 [![npm downloads](https://img.shields.io/npm/dm/%40nhankyjangchan%2Fkoa-cors?style=for-the-badge&color=lightgreen)](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)
 [![unpacked Size](https://img.shields.io/npm/unpacked-size/%40nhankyjangchan%2Fkoa-cors?style=for-the-badge&color=lightgreen)](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)
 [![last update](https://img.shields.io/npm/last-update/%40nhankyjangchan%2Fkoa-cors?style=for-the-badge&color=lightgreen)](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)
@@ -76,7 +76,22 @@ export interface Options {
      * @see https://fetch.spec.whatwg.org/#http-cors-protocol
      * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
      */
-    origin?: string | Set<string> | Plugin.ComputeOrigin;
+    origin?: string | Set<string> | (ctx: Context) => string | Promise<string>;
+
+    /**
+     * Configure the `Access-Control-Allow-Credentials` header.
+     * Indicates whether the request can include user credentials like cookies,
+     * HTTP authentication, or client-side SSL certificates.
+     *
+     * Note: When credentials are enabled and `origin: '*'` is configured,
+     * the `Access-Control-Allow-Origin` header will be set to the actual
+     * request origin instead of `'*'` to comply with the CORS specification.
+     *
+     * @default false
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials
+     * @see https://fetch.spec.whatwg.org/#cors-protocol-and-credentials
+     */
+    credentials?: boolean | (ctx: Context) => boolean | Promise<boolean>;
 
     /**
      * Configure the `Access-Control-Allow-Methods` header.
@@ -85,13 +100,6 @@ export interface Options {
      * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
      */
     allowMethods?: string | string[];
-
-    /**
-     * Configure the `Access-Control-Expose-Headers` header.
-     *
-     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers
-     */
-    exposeHeaders?: string | string[];
 
     /**
      * Configure the `Access-Control-Allow-Headers` header.
@@ -112,19 +120,11 @@ export interface Options {
     maxAge?: string | number;
 
     /**
-     * Configure the `Access-Control-Allow-Credentials` header.
-     * Indicates whether the request can include user credentials like cookies,
-     * HTTP authentication, or client-side SSL certificates.
+     * Configure the `Access-Control-Expose-Headers` header.
      *
-     * Note: When credentials are enabled and `origin: '*'` is configured,
-     * the `Access-Control-Allow-Origin` header will be set to the actual
-     * request origin instead of `'*'` to comply with the CORS specification.
-     *
-     * @default false
-     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials
-     * @see https://fetch.spec.whatwg.org/#cors-protocol-and-credentials
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers
      */
-    credentials?: boolean | Plugin.Predicate;
+    exposeHeaders?: string | string[];
 
     /**
      * Enable Private Network Access handling.
@@ -135,9 +135,9 @@ export interface Options {
      * private networks (e.g., localhost, intranet) as per the Private Network Access specification.
      *
      * @default false
+     * @see https://wicg.github.io/private-network-access
      * @see https://docs.cloud.google.com/service-directory/docs/private-network-access-overview
      * @see https://developer.chrome.com/blog/private-network-access-preflight
-     * @see https://wicg.github.io/private-network-access
      */
     privateNetworkAccess?: boolean;
 
@@ -188,7 +188,7 @@ export interface Options {
      *
      * @default false
      */
-    shouldSkip?: false | Plugin.Predicate;
+    shouldSkip?: false | (ctx: Context) => boolean | Promise<boolean>;
 }
 ```
 

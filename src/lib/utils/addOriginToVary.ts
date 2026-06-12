@@ -1,7 +1,7 @@
 /**
  * @internal
  */
-export function mergeVaryWithOrigin(existingVary: string): string {
+export function addOriginToVary(existingVary: string): string {
     if (existingVary === '*')
         return existingVary;
 

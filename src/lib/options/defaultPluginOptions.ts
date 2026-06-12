@@ -1,13 +1,13 @@
-import type { Options } from '../../_types/pluginTypes.ts';
+import type { Options } from '@lib/types';
 
 /**
  * @internal
  */
 export const defaultPluginOptions: Options = {
     origin: '*',
+    credentials: false,
     allowMethods: ['HEAD', 'POST', 'GET', 'PATCH', 'PUT', 'DELETE'],
     maxAge: '3600',
-    credentials: false,
     privateNetworkAccess: false,
     originOpenerPolicy: false,
     originEmbedderPolicy: false,

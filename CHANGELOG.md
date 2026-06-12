@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 The project adheres to [Semantic Versioning](https://semver.org).
 
+## **2.1.2** / 2026-06-12
+
+### Added
+
+- **`Plugin.Origin` Type**: Added a dedicated `Origin` type alias (`string | Set<string> | ComputeOrigin`) in the `Plugin` namespace, providing a reusable type for the `origin` option and resolver factory parameter.
+- **`Plugin.Credentials` Type**: Added a dedicated `Credentials` type alias (`boolean | Predicate`) in the `Plugin` namespace, providing a reusable type for the `credentials` option and resolver factory parameter.
+- **Tests**: New test cases have been added, bringing the total number of tests to 76.
+
+### Changed
+
+- **Type Definitions**:
+    - `Plugin.Headers` type changed from `Record<string, string>` to `Record<string, string | undefined>`, allowing headers with potentially undefined values.
+    - `Plugin.E.headers` is now optional (`headers?: Headers` instead of `headers: Headers`), which is more semantically correct.
+    - The `Options` interface now references `Plugin.Origin` and `Plugin.Credentials` instead of inline type unions (`string | Set<string> | Plugin.ComputeOrigin` and `boolean | Plugin.Predicate`).
+- **Resolver Factory Signatures**: `createOriginResolver` and `createCredentialsResolver` now accept their specific option field directly (`origin?: Plugin.Origin` and `credentials?: Plugin.Credentials`) rather than the entire `Options` object.
+- **`createCredentialsResolver` Internal Naming**: The internal dynamic resolution function has been renamed from `computeCredentials` to `resolveDynamicCredentials`, aligning with the naming convention established in `createOriginResolver` (`resolveDynamicOrigin`). The `credentials` parameter is now typed as `Plugin.Credentials | undefined` and is optional.
+- **`createOriginResolver` Implementation**: The `origin` parameter is now typed as `Plugin.Origin | undefined` and is optional. Internal resolver functions now reference the `origin` parameter directly instead of accessing `pluginOptions.origin` from the outer scope, improving clarity and reducing closure overhead. The `resolveDynamicOrigin` function uses an explicit `Plugin.ComputeOrigin` cast instead of the generic `Function` cast. The `matchOriginFromList` function uses a descriptive `setOfOrigins` variable name instead of inline casting.
+- **`normalizeMaxAge` Function**: The function signature has been updated from `(maxAge: number)` to `(maxAge: string | number = '')`. This eliminates the need for unary `+` coercion at the call site and adds a default empty string parameter. The function now includes an early return for falsy values (`!maxAge`), and validates both numeric and string-integer inputs via `Number.isInteger(+maxAge)`.
+- **`mergeVaryWithOrigin` Renamed to `addOriginToVary`**: The function has been renamed for improved semantic clarity. The new name more accurately describes its single responsibility — adding the `origin` field name to an existing `Vary` header value. The implementation remains identical.
+- **`mergeErrorHeaders` Renamed to `mergeHeadersWithError`**: The function has been renamed for improved semantic clarity. The function signature has been updated to accept `(corsHeaders, e)` instead of `(error, corsHeaders)`, placing the primary data (CORS headers) first. Additionally, the function now handles non-Error throwables by creating an `Error` instance via `new Error(String(e))`, ensuring CORS headers are reliably attached even when downstream middleware throws primitive values. The function now uses destructuring with rest spread (`const { Vary, vary, ...errorHeaders }`) to isolate and remove `Vary`/`vary` keys, replacing the previous `delete` operator approach with a purely functional pattern.
+- **`cors` Middleware Factory**: Updated all calls to resolver factories and utility functions to match their new signatures. The resolver factories now receive `pluginOptions.origin` and `pluginOptions.credentials` directly instead of the entire `pluginOptions` object. The `maxAge` normalisation call now passes `pluginOptions.maxAge` directly without unary `+` coercion. The `catch` clause variable renamed from `error` to `e` for consistency with the updated utility function signature. All imports now use path aliases.
+
 ## **2.1.1** / 2026-06-01
 
 ### Info

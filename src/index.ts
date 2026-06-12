@@ -1,9 +1,9 @@
-import { defaultPluginOptions } from './lib/options/defaultPluginOptions.ts';
-import { createOriginResolver } from './lib/resolvers/createOriginResolver.ts';
-import { createCredentialsResolver } from './lib/resolvers/createCredentialsResolver.ts';
-import { normalizeMaxAge } from './lib/utils/normalizeMaxAge.ts';
-import { mergeErrorHeaders } from './lib/utils/mergeErrorHeaders.ts';
-import type { Options, Plugin } from './_types/pluginTypes.ts';
+import { defaultPluginOptions } from '@lib/options/defaultPluginOptions';
+import { createOriginResolver } from '@lib/resolvers/createOriginResolver';
+import { createCredentialsResolver } from '@lib/resolvers/createCredentialsResolver';
+import { normalizeMaxAge } from '@lib/utils/normalizeMaxAge';
+import { mergeHeadersWithError } from '@lib/utils/mergeHeadersWithError';
+import type { Options, Plugin } from '@lib/types';
 import type { Context, Next, Middleware } from 'koa';
 
 export function cors(options: Options = {}): Middleware {
@@ -21,10 +21,10 @@ export function cors(options: Options = {}): Middleware {
     if (Array.isArray(pluginOptions.allowHeaders))
         pluginOptions.allowHeaders = pluginOptions.allowHeaders.join(',');
 
-    const resolveOrigin: Plugin.OriginResolver = createOriginResolver(pluginOptions);
-    const resolveCredentials: Plugin.Predicate = createCredentialsResolver(pluginOptions);
+    const resolveOrigin: Plugin.OriginResolver = createOriginResolver(pluginOptions.origin);
+    const resolveCredentials: Plugin.Predicate = createCredentialsResolver(pluginOptions.credentials);
 
-    const maxAge: string | null = normalizeMaxAge(+pluginOptions.maxAge!);
+    const maxAge: string | null = normalizeMaxAge(pluginOptions.maxAge);
     const isShouldSkipFunction: boolean = typeof pluginOptions.shouldSkip === 'function';
 
     return async function (ctx: Context, next: Next): Promise<void> {
@@ -73,8 +73,8 @@ export function cors(options: Options = {}): Middleware {
 
             try {
                 return await next();
-            } catch (error: unknown) {
-                throw mergeErrorHeaders(error, corsHeaders);
+            } catch (e: unknown) {
+                throw mergeHeadersWithError(corsHeaders, e);
             }
         } else {
             const requestedMethod: string = ctx.get('Access-Control-Request-Method');
