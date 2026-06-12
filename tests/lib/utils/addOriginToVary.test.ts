@@ -39,7 +39,6 @@ describe('`addOriginToVary` function', (): void => {
 
     it('should return merged header with stringified base header, if base header is not string', (): void => {
         const baseHeader: object = { koa: 'the best', I: 'love it', prop: null };
-        // @ts-ignore
         const mergedVary: string = addOriginToVary(baseHeader);
         expect(mergedVary).toBe('origin, [object object]');
     });

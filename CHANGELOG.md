@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 The project adheres to [Semantic Versioning](https://semver.org).
 
+## **2.1.3** / 2026-06-12
+
+### Changed
+
+- **Type Definitions**: `Plugin.Headers` type has been changed from `Record<string, string | undefined>` to `Record<string, string>` and no longer allows headers with potentially undefined values.
+- **`createOriginResolver` Factory Internal Refactoring**: The auxiliary constant `isOriginSet` has been removed; the check for whether `origin` argument belongs to a `Set` has been moved directly to the branch operator.
+- **`createCredentialsResolver` Factory Strategy Refactoring**: The `staticCredentials` strategy of the `createCredentialsResolver` factory now explicitly casts the return value to a `boolean` type.
+- **Declared Parameter Type of `addOriginToVary` Utility**: The `existingVary` parameter for the argument in `addOriginToVary` function is now of type `unknown`, which is more semantically correct.
+- **Accessing Error Headers in `mergeHeadersWithError`**: The `headers` property of the `error` object in the body of `mergeHeadersWithError` is now accessed via the dot notation `error.headers` rather than the optional sequence operator `error?.headers`.
+- **`cors` Middleware Factory Refactoring**: The `pluginOptions` middleware options are now destructured into separate variables: `const { origin, credentials, allowMethods... etc. } = pluginOptions` directly in the body of the `cors` factory. Instead of accessing the `pluginOptions` property, direct access to the options is used, improving code readability. Based on this change, the code has been refactored.
+- **Dependency Versions**: Updated `prettier` from `^3.8.3` to `^3.8.4` in `devDependencies`.
+- **Documentation**: Updated `README.md`. The changes include a block of features and middleware options.
+
 ## **2.1.2** / 2026-06-12
 
 ### Added

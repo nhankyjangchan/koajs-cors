@@ -21,11 +21,25 @@ export function cors(options: Options = {}): Middleware {
     if (Array.isArray(pluginOptions.allowHeaders))
         pluginOptions.allowHeaders = pluginOptions.allowHeaders.join(',');
 
-    const resolveOrigin: Plugin.OriginResolver = createOriginResolver(pluginOptions.origin);
-    const resolveCredentials: Plugin.Predicate = createCredentialsResolver(pluginOptions.credentials);
+    const {
+        origin,
+        credentials,
+        allowMethods,
+        allowHeaders,
+        maxAge,
+        exposeHeaders,
+        privateNetworkAccess,
+        originOpenerPolicy,
+        originEmbedderPolicy,
+        keepHeadersOnError,
+        shouldSkip
+    } = pluginOptions;
 
-    const maxAge: string | null = normalizeMaxAge(pluginOptions.maxAge);
-    const isShouldSkipFunction: boolean = typeof pluginOptions.shouldSkip === 'function';
+    const resolveOrigin: Plugin.OriginResolver = createOriginResolver(origin);
+    const resolveCredentials: Plugin.Predicate = createCredentialsResolver(credentials);
+
+    const normalizedMaxAge: string | null = normalizeMaxAge(maxAge);
+    const isShouldSkipDefined: boolean = typeof shouldSkip === 'function';
 
     return async function (ctx: Context, next: Next): Promise<void> {
         ctx.vary('Origin');
@@ -34,17 +48,16 @@ export function cors(options: Options = {}): Middleware {
         if (!requestOrigin)
             return await next();
 
-        if (isShouldSkipFunction) {
-            const shouldSkip: boolean = await (pluginOptions.shouldSkip as Plugin.Predicate)(ctx);
-            if (shouldSkip)
-                return await next();
+        if (isShouldSkipDefined) {
+            const skip: boolean = await (shouldSkip as Plugin.Predicate)(ctx);
+            if (skip) return await next();
         }
 
-        let origin: string = await resolveOrigin(ctx, requestOrigin);
-        const credentials: boolean = await resolveCredentials(ctx);
+        let resolvedOrigin: string = await resolveOrigin(ctx, requestOrigin);
+        const resolvedCredentials: boolean = await resolveCredentials(ctx);
 
-        if (credentials && origin === '*')
-            origin = requestOrigin;
+        if (resolvedCredentials && resolvedOrigin === '*')
+            resolvedOrigin = requestOrigin;
 
         const corsHeaders: Plugin.Headers = {};
 
@@ -54,21 +67,21 @@ export function cors(options: Options = {}): Middleware {
         }
 
         if (ctx.method !== 'OPTIONS') {
-            applyHeader('Access-Control-Allow-Origin', origin);
+            applyHeader('Access-Control-Allow-Origin', resolvedOrigin);
 
-            if (pluginOptions.exposeHeaders)
-                applyHeader('Access-Control-Expose-Headers', pluginOptions.exposeHeaders as string);
+            if (exposeHeaders)
+                applyHeader('Access-Control-Expose-Headers', exposeHeaders);
 
-            if (credentials)
+            if (resolvedCredentials)
                 applyHeader('Access-Control-Allow-Credentials', 'true');
 
-            if (pluginOptions.originOpenerPolicy)
+            if (originOpenerPolicy)
                 applyHeader('Cross-Origin-Opener-Policy', 'same-origin');
 
-            if (pluginOptions.originEmbedderPolicy)
+            if (originEmbedderPolicy)
                 applyHeader('Cross-Origin-Embedder-Policy', 'require-corp');
 
-            if (!pluginOptions.keepHeadersOnError)
+            if (!keepHeadersOnError)
                 return await next();
 
             try {
@@ -81,30 +94,30 @@ export function cors(options: Options = {}): Middleware {
             if (!requestedMethod)
                 return await next();
 
-            ctx.set('Access-Control-Allow-Origin', origin);
+            ctx.set('Access-Control-Allow-Origin', resolvedOrigin);
 
-            if (pluginOptions.allowMethods)
-                ctx.set('Access-Control-Allow-Methods', pluginOptions.allowMethods);
+            if (allowMethods)
+                ctx.set('Access-Control-Allow-Methods', allowMethods);
 
             const requestedHeaders: string = ctx.get('Access-Control-Request-Headers');
-            const allowHeaders: string = (pluginOptions.allowHeaders as string) || requestedHeaders;
-            if (allowHeaders)
-                ctx.set('Access-Control-Allow-Headers', allowHeaders);
+            const allowedHeaders: string = allowHeaders || requestedHeaders;
+            if (allowedHeaders)
+                ctx.set('Access-Control-Allow-Headers', allowedHeaders);
 
-            if (maxAge)
-                ctx.set('Access-Control-Max-Age', maxAge);
+            if (normalizedMaxAge)
+                ctx.set('Access-Control-Max-Age', normalizedMaxAge);
 
-            if (credentials)
+            if (resolvedCredentials)
                 ctx.set('Access-Control-Allow-Credentials', 'true');
 
             const requestedPrivateNetwork: string = ctx.get('Access-Control-Request-Private-Network');
-            if (pluginOptions.privateNetworkAccess && requestedPrivateNetwork)
+            if (privateNetworkAccess && requestedPrivateNetwork)
                 ctx.set('Access-Control-Allow-Private-Network', 'true');
 
-            if (pluginOptions.originOpenerPolicy)
+            if (originOpenerPolicy)
                 ctx.set('Cross-Origin-Opener-Policy', 'same-origin');
 
-            if (pluginOptions.originEmbedderPolicy)
+            if (originEmbedderPolicy)
                 ctx.set('Cross-Origin-Embedder-Policy', 'require-corp');
 
             ctx.status = 204;

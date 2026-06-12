@@ -22,8 +22,10 @@ Automatically adds `Vary: Origin` header to all responses to ensure proper cachi
 ## ✨ Features
 
 - Static or dynamic origin validation (string, Set, or function, including async)
+- Dynamic credentials resolution (boolean or function, including async)
 - Automatic rejection of unauthorized origins (403) and invalid configuration (500)
 - Automatically adds `Vary: Origin` header for proper caching
+- Proper merging of `Vary` headers during error handling (deduplication, lowercasing)
 - Preflight (OPTIONS) request handling with method and header validation
 - Configurable preflight caching via `Access-Control-Max-Age`
 - Automatic echo of `Access-Control-Request-Headers` when `allowHeaders` is not set
@@ -31,12 +33,14 @@ Automatically adds `Vary: Origin` header to all responses to ensure proper cachi
 - Private Network Access support (preflight requests from public to private networks)
 - Cross-Origin-Opener-Policy (`same-origin`) and Cross-Origin-Embedder-Policy (`require-corp`) headers
 - Error handling with CORS header preservation (`keepHeadersOnError`)
+- Safe handling of non-Error throwables (primitives are wrapped in Error instances)
 - Conditional skipping of CORS processing (`shouldSkip`)
 - Zero external dependencies
+- Full TypeScript support with dedicated types in the `Plugin` namespace
 
-## ℹ️ Note
+## ℹ️ Note (For version lower than v2.0.0)
 
-> This package was previously published as **`@nhankyjangchan/koajs-cors`**. Starting with v1.4.0, this package has been migrated to a new name: **[@nhankyjangchan/koa-cors](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)**. If you're still using legacy **[@nhankyjangchan/koajs-cors](https://www.npmjs.com/package/@nhankyjangchan/koajs-cors)**, please migrate to new package — [it](https://www.npmjs.com/package/@nhankyjangchan/koajs-cors) is now deprecated and receives security fixes only. Migration is seamless, just install the **[new package](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)** and swap the package name in your `package.json` and import statements. The API remains unchanged.
+> This package was previously published as **`@nhankyjangchan/koajs-cors`**. Starting with v1.4.0, this package has been migrated to a new name: **[@nhankyjangchan/koa-cors](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)**. If you're still using legacy **[@nhankyjangchan/koajs-cors](https://www.npmjs.com/package/@nhankyjangchan/koajs-cors)**, please migrate to new package, because [this](https://www.npmjs.com/package/@nhankyjangchan/koajs-cors) is now deprecated and receives security fixes only. Migration is seamless, just install the **[new package](https://www.npmjs.com/package/@nhankyjangchan/koa-cors)** and swap the package name in your `package.json` and import statements. The API remains unchanged.
 
 ## 📦 Installation
 
@@ -83,6 +87,9 @@ export interface Options {
      * Indicates whether the request can include user credentials like cookies,
      * HTTP authentication, or client-side SSL certificates.
      *
+     * Accepts a static boolean or a function for dynamic resolution.
+     * The function receives the Koa context and may return a boolean or a Promise resolving to a boolean.
+     *
      * Note: When credentials are enabled and `origin: '*'` is configured,
      * the `Access-Control-Allow-Origin` header will be set to the actual
      * request origin instead of `'*'` to comply with the CORS specification.
@@ -95,6 +102,7 @@ export interface Options {
 
     /**
      * Configure the `Access-Control-Allow-Methods` header.
+     * Specifies the HTTP methods allowed when accessing the resource in response to a preflight request.
      *
      * @default ['HEAD', 'POST', 'GET', 'PATCH', 'PUT', 'DELETE']
      * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
@@ -103,6 +111,7 @@ export interface Options {
 
     /**
      * Configure the `Access-Control-Allow-Headers` header.
+     * Specifies the HTTP headers allowed during the actual request in response to a preflight request.
      * If not specified during preflight, the value of `Access-Control-Request-Headers` will be echoed back.
      *
      * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
@@ -121,6 +130,7 @@ export interface Options {
 
     /**
      * Configure the `Access-Control-Expose-Headers` header.
+     * Specifies which response headers should be exposed to the browser in the actual request.
      *
      * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers
      */
@@ -171,7 +181,8 @@ export interface Options {
      * ensuring they are sent even in error responses.
      *
      * The middleware also properly merges the `Vary: Origin` header with any
-     * existing `Vary` headers from the error object.
+     * existing `Vary` headers from the error object, deduplicating field names
+     * and converting them to lowercase for consistency.
      *
      * @default true
      */
@@ -184,7 +195,7 @@ export interface Options {
      * (or a Promise resolving to a boolean). If the function returns `true`,
      * the middleware immediately calls `next()` without adding any CORS headers.
      *
-     * Set to `false` or not set anything to never skip CORS processing.
+     * Set to `false` or omit to never skip CORS processing.
      *
      * @default false
      */
@@ -217,8 +228,10 @@ const defaultOptions: Options = {
 /**
  * File `src/plugins/cors.plugin.ts`.
  */
-import koaCors from '@nhankyjangchan/koa-cors'; // ESM
-const { cors: koaCors } = require('@nhankyjangchan/koa-cors'); // CJS
+// for ESM
+import koaCors from '@nhankyjangchan/koa-cors';
+// for CJS
+const koaCors = require('@nhankyjangchan/koa-cors');
 
 import type { Options } from '@nhankyjangchan/koa-cors';
 import type { Middleware } from 'koa';

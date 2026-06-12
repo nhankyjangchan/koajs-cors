@@ -1,7 +1,7 @@
 /**
  * @internal
  */
-export function addOriginToVary(existingVary: string): string {
+export function addOriginToVary(existingVary: unknown): string {
     if (existingVary === '*')
         return existingVary;
 
