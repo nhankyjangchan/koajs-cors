@@ -6,13 +6,12 @@ import type { Context } from 'koa';
  */
 export function createOriginResolver(origin?: Plugin.Origin): Plugin.OriginResolver {
     const originType: string = typeof origin;
-    const isOriginSet: boolean = origin instanceof Set;
 
     if (originType === 'string')
         return matchExactOrigin;
     else if (originType === 'function')
         return resolveDynamicOrigin;
-    else if (isOriginSet)
+    else if (origin instanceof Set)
         return matchOriginFromList;
     else return rejectRequest;
 

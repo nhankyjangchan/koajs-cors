@@ -20,6 +20,6 @@ export namespace Plugin {
     export type OriginResolver = (ctx: Context, requestOrigin: string) => string | Promise<string>;
     export type Credentials = boolean | Predicate;
     export type Predicate = (ctx: Context) => boolean | Promise<boolean>;
-    export type Headers = Record<string, string | undefined>;
+    export type Headers = Record<string, string>;
     export type E = Error & { headers?: Headers };
 }

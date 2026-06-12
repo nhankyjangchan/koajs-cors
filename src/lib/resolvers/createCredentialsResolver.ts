@@ -15,6 +15,6 @@ export function createCredentialsResolver(credentials?: Plugin.Credentials): Plu
     }
 
     function staticCredentials(): boolean {
-        return credentials as boolean;
+        return !!credentials;
     }
 }

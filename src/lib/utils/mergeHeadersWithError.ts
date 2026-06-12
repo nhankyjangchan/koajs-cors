@@ -6,7 +6,7 @@ import type { Plugin } from '@lib/types';
  */
 export function mergeHeadersWithError(corsHeaders: Plugin.Headers, e: unknown): Plugin.E {
     const error: Plugin.E = e instanceof Error ? e : new Error(String(e));
-    const existingErrorHeaders: Plugin.Headers = error?.headers || {};
+    const existingErrorHeaders: Plugin.Headers = error.headers || {};
 
     const { Vary, vary, ...errorHeaders } = existingErrorHeaders;
 
