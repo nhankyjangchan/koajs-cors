@@ -1,12 +1,12 @@
-import type { Options, Plugin } from '../../_types/pluginTypes.ts';
+import type { Plugin } from '@lib/types';
 import type { Context } from 'koa';
 
 /**
  * @internal
  */
-export function createOriginResolver(pluginOptions: Options): Plugin.OriginResolver {
-    const originType: string = typeof pluginOptions.origin;
-    const isOriginSet: boolean = pluginOptions.origin instanceof Set;
+export function createOriginResolver(origin?: Plugin.Origin): Plugin.OriginResolver {
+    const originType: string = typeof origin;
+    const isOriginSet: boolean = origin instanceof Set;
 
     if (originType === 'string')
         return matchExactOrigin;
@@ -17,22 +17,24 @@ export function createOriginResolver(pluginOptions: Options): Plugin.OriginResol
     else return rejectRequest;
 
     function matchExactOrigin(ctx: Context, requestOrigin: string): string {
-        if (pluginOptions.origin !== requestOrigin && pluginOptions.origin !== '*')
+        if (origin !== requestOrigin && origin !== '*')
             ctx.throw(403);
-        return pluginOptions.origin as string;
+        return origin;
     }
 
     async function resolveDynamicOrigin(ctx: Context): Promise<string> {
-        const origin: unknown = await (pluginOptions.origin as Function)(ctx);
-        if (!origin)
+        const computeOrigin = origin as Plugin.ComputeOrigin;
+        const computedOrigin: unknown = await computeOrigin(ctx);
+        if (!computedOrigin)
             ctx.throw(403);
-        return typeof origin === 'string' ? origin : ctx.throw(500);
+        return typeof computedOrigin === 'string' ? computedOrigin : ctx.throw(500);
     }
 
     function matchOriginFromList(ctx: Context, requestOrigin: string): string {
-        if (!(pluginOptions.origin as Set<string>).has(requestOrigin))
+        const setOfOrigins = origin as Set<string>;
+        if (!setOfOrigins.has(requestOrigin))
             ctx.throw(403);
-        return requestOrigin as string;
+        return requestOrigin;
     }
 
     function rejectRequest(ctx: Context): never {
