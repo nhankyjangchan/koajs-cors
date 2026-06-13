@@ -37,6 +37,7 @@ Automatically adds `Vary: Origin` header to all responses to ensure proper cachi
 - Conditional skipping of CORS processing (`shouldSkip`)
 - Zero external dependencies
 - Full TypeScript support with dedicated types in the `Plugin` namespace
+- Built-in support for ESM and CJS
 
 ## ℹ️ Note (For version lower than v2.0.0)
 
@@ -71,107 +72,72 @@ export interface Options {
     /**
      * Configure the `Access-Control-Allow-Origin` header.
      *
-     * Accepts a static string, a list (Set) of allowed origins, or a function for dynamic resolution.
-     * The function receives the Koa context and may return a string or a Promise resolving to a string.
-     * If the function returns a falsy value (empty string, `null`, `undefined`), the request will be rejected with a 403.
-     * If the option is set to an invalid type, the request will be rejected with a 500.
-     *
      * @default '*'
-     * @see https://fetch.spec.whatwg.org/#http-cors-protocol
-     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
+     * @see https://fetch.spec.whatwg.org/#http-origin
      */
     origin?: string | Set<string> | (ctx: Context) => string | Promise<string>;
 
     /**
      * Configure the `Access-Control-Allow-Credentials` header.
-     * Indicates whether the request can include user credentials like cookies,
-     * HTTP authentication, or client-side SSL certificates.
-     *
-     * Accepts a static boolean or a function for dynamic resolution.
-     * The function receives the Koa context and may return a boolean or a Promise resolving to a boolean.
-     *
-     * Note: When credentials are enabled and `origin: '*'` is configured,
-     * the `Access-Control-Allow-Origin` header will be set to the actual
-     * request origin instead of `'*'` to comply with the CORS specification.
      *
      * @default false
-     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials
-     * @see https://fetch.spec.whatwg.org/#cors-protocol-and-credentials
+     * @see https://fetch.spec.whatwg.org/#http-access-control-allow-credentials
      */
     credentials?: boolean | (ctx: Context) => boolean | Promise<boolean>;
 
     /**
      * Configure the `Access-Control-Allow-Methods` header.
-     * Specifies the HTTP methods allowed when accessing the resource in response to a preflight request.
      *
      * @default ['HEAD', 'POST', 'GET', 'PATCH', 'PUT', 'DELETE']
-     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
+     * @see https://fetch.spec.whatwg.org/#http-access-control-allow-methods
      */
     allowMethods?: string | string[];
 
     /**
      * Configure the `Access-Control-Allow-Headers` header.
-     * Specifies the HTTP headers allowed during the actual request in response to a preflight request.
-     * If not specified during preflight, the value of `Access-Control-Request-Headers` will be echoed back.
      *
-     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
+     * @default undefined
+     * @see https://fetch.spec.whatwg.org/#http-access-control-allow-headers
      */
     allowHeaders?: string | string[];
 
     /**
      * Configure the `Access-Control-Max-Age` header (in seconds).
-     * Specifies how long the results of a preflight request can be cached.
-     * If the value cannot be parsed as an integer, the header will be omitted.
      *
      * @default '3600'
-     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age
+     * @see https://fetch.spec.whatwg.org/#http-access-control-max-age
      */
     maxAge?: string | number;
 
     /**
      * Configure the `Access-Control-Expose-Headers` header.
-     * Specifies which response headers should be exposed to the browser in the actual request.
      *
-     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers
+     * @default undefined
+     * @see https://fetch.spec.whatwg.org/#http-access-control-expose-headers
      */
     exposeHeaders?: string | string[];
 
     /**
      * Enable Private Network Access handling.
-     * Adds the `Access-Control-Allow-Private-Network` header for preflight requests
-     * when the `Access-Control-Request-Private-Network` header is present.
-     *
-     * This is required for requests from public websites to resources within
-     * private networks (e.g., localhost, intranet) as per the Private Network Access specification.
      *
      * @default false
-     * @see https://wicg.github.io/private-network-access
-     * @see https://docs.cloud.google.com/service-directory/docs/private-network-access-overview
-     * @see https://developer.chrome.com/blog/private-network-access-preflight
+     * @see https://wicg.github.io/private-network-access/#headers
      */
     privateNetworkAccess?: boolean;
 
     /**
-     * Enable Cross-Origin-Opener-Policy header.
-     * Sets `Cross-Origin-Opener-Policy: same-origin` on all responses (including preflight).
-     *
-     * This header prevents cross-origin documents from sharing a browsing context group,
-     * providing process isolation and preventing certain types of cross-origin attacks.
+     * Enable `Cross-Origin-Opener-Policy` header.
      *
      * @default false
-     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy
+     * @see https://html.spec.whatwg.org/dev/browsers.html#cross-origin-opener-policies
      */
     originOpenerPolicy?: boolean;
 
     /**
-     * Enable Cross-Origin-Embedder-Policy header.
-     * Sets `Cross-Origin-Embedder-Policy: require-corp` on all responses (including preflight).
-     *
-     * This header prevents the document from loading cross-origin resources that don't
-     * explicitly grant permission using CORS or the `Cross-Origin-Resource-Policy` header.
+     * Enable `Cross-Origin-Embedder-Policy` header.
      *
      * @default false
-     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
+     * @see https://html.spec.whatwg.org/dev/browsers.html#the-coep-headers
      */
     originEmbedderPolicy?: boolean;
 
@@ -195,8 +161,6 @@ export interface Options {
      * (or a Promise resolving to a boolean). If the function returns `true`,
      * the middleware immediately calls `next()` without adding any CORS headers.
      *
-     * Set to `false` or omit to never skip CORS processing.
-     *
      * @default false
      */
     shouldSkip?: false | (ctx: Context) => boolean | Promise<boolean>;
@@ -211,9 +175,9 @@ export interface Options {
  */
 const defaultOptions: Options = {
     origin: '*',
+    credentials: false,
     allowMethods: ['HEAD', 'POST', 'GET', 'PATCH', 'PUT', 'DELETE'],
     maxAge: '3600',
-    credentials: false,
     privateNetworkAccess: false,
     originOpenerPolicy: false,
     originEmbedderPolicy: false,
@@ -228,22 +192,18 @@ const defaultOptions: Options = {
 /**
  * File `src/plugins/cors.plugin.ts`.
  */
-// for ESM
 import koaCors from '@nhankyjangchan/koa-cors';
-// for CJS
-const koaCors = require('@nhankyjangchan/koa-cors');
-
 import type { Options } from '@nhankyjangchan/koa-cors';
 import type { Middleware } from 'koa';
 
-const cors: Middleware = (function () {
+export const corsPlugin: Middleware = (function () {
     const options: Options = {
         origin: 'https://example.com',
+        credentials: true,
         allowMethods: ['HEAD', 'GET', 'POST', 'PUT', 'DELETE'],
-        exposeHeaders: ['X-Pagination-Offset', 'X-Response-Time'],
         allowHeaders: ['Content-Type', 'Authorization'],
         maxAge: 3600,
-        credentials: true,
+        exposeHeaders: ['X-Pagination-Offset', 'X-Response-Time'],
         privateNetworkAccess: false,
         originOpenerPolicy: false,
         originEmbedderPolicy: false,
@@ -254,17 +214,15 @@ const cors: Middleware = (function () {
     return koaCors(options);
 })();
 
-export default cors;
-
 /**
  * File `src/app.ts`.
  */
 import Koa from 'koa';
-import cors from './plugins/cors.plugin.ts';
+import { corsPlugin } from './plugins/cors.plugin.ts';
 
 const app = new Koa();
 
-app.use(cors);
+app.use(corsPlugin);
 // ...
 app.listen(3000);
 ```
@@ -279,6 +237,10 @@ $ bun test --coverage
 
 [CHANGELOG](./CHANGELOG.md)
 
-## 📄 License
+## 📄 Docs
+
+[DOCUMENTATION](https://github.com/nhankyjangchan/koa-cors/tree/main/docs)
+
+## 🪪 License
 
 [MIT](./LICENSE)

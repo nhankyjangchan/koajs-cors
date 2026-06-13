@@ -2,8 +2,9 @@ import { defaultPluginOptions } from '@lib/options/defaultPluginOptions';
 import { createOriginResolver } from '@lib/resolvers/createOriginResolver';
 import { createCredentialsResolver } from '@lib/resolvers/createCredentialsResolver';
 import { normalizeMaxAge } from '@lib/utils/normalizeMaxAge';
+import { applyHeader } from '@lib/utils/applyHeader';
 import { mergeHeadersWithError } from '@lib/utils/mergeHeadersWithError';
-import type { Options, Plugin } from '@lib/types';
+import type { Options, Plugin, Headers } from '@lib/types';
 import type { Context, Next, Middleware } from 'koa';
 
 export function cors(options: Options = {}): Middleware {
@@ -46,11 +47,13 @@ export function cors(options: Options = {}): Middleware {
 
         const requestOrigin: string = ctx.get('Origin');
         if (!requestOrigin)
-            return await next();
+            return next();
 
         if (isShouldSkipDefined) {
-            const skip: boolean = await (shouldSkip as Plugin.Predicate)(ctx);
-            if (skip) return await next();
+            const pendingSkip: boolean | Promise<boolean> = (shouldSkip as Plugin.Predicate)(ctx);
+            const resolvedSkip: boolean = pendingSkip instanceof Promise ? await pendingSkip : pendingSkip;
+            if (resolvedSkip)
+                return next();
         }
 
         let resolvedOrigin: string = await resolveOrigin(ctx, requestOrigin);
@@ -59,40 +62,35 @@ export function cors(options: Options = {}): Middleware {
         if (resolvedCredentials && resolvedOrigin === '*')
             resolvedOrigin = requestOrigin;
 
-        const corsHeaders: Plugin.Headers = {};
-
-        function applyHeader(key: string, value: string): void {
-            ctx.set(key, value);
-            corsHeaders[key] = value;
-        }
+        const headers: Headers = {};
 
         if (ctx.method !== 'OPTIONS') {
-            applyHeader('Access-Control-Allow-Origin', resolvedOrigin);
+            applyHeader(ctx, headers, 'Access-Control-Allow-Origin', resolvedOrigin);
 
             if (exposeHeaders)
-                applyHeader('Access-Control-Expose-Headers', exposeHeaders);
+                applyHeader(ctx, headers, 'Access-Control-Expose-Headers', exposeHeaders);
 
             if (resolvedCredentials)
-                applyHeader('Access-Control-Allow-Credentials', 'true');
+                applyHeader(ctx, headers, 'Access-Control-Allow-Credentials', 'true');
 
             if (originOpenerPolicy)
-                applyHeader('Cross-Origin-Opener-Policy', 'same-origin');
+                applyHeader(ctx, headers, 'Cross-Origin-Opener-Policy', 'same-origin');
 
             if (originEmbedderPolicy)
-                applyHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+                applyHeader(ctx, headers, 'Cross-Origin-Embedder-Policy', 'require-corp');
 
             if (!keepHeadersOnError)
-                return await next();
+                return next();
 
             try {
                 return await next();
             } catch (e: unknown) {
-                throw mergeHeadersWithError(corsHeaders, e);
+                throw mergeHeadersWithError(headers, e);
             }
         } else {
             const requestedMethod: string = ctx.get('Access-Control-Request-Method');
             if (!requestedMethod)
-                return await next();
+                return next();
 
             ctx.set('Access-Control-Allow-Origin', resolvedOrigin);
 

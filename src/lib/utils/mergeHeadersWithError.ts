@@ -1,12 +1,12 @@
 import { addOriginToVary } from '@lib/utils/addOriginToVary';
-import type { Plugin } from '@lib/types';
+import type { Plugin, Headers } from '@lib/types';
 
 /**
  * @internal
  */
-export function mergeHeadersWithError(corsHeaders: Plugin.Headers, e: unknown): Plugin.E {
+export function mergeHeadersWithError(headers: Headers, e: unknown): Plugin.E {
     const error: Plugin.E = e instanceof Error ? e : new Error(String(e));
-    const existingErrorHeaders: Plugin.Headers = error.headers || {};
+    const existingErrorHeaders: Headers = error.headers || {};
 
     const { Vary, vary, ...errorHeaders } = existingErrorHeaders;
 
@@ -15,7 +15,7 @@ export function mergeHeadersWithError(corsHeaders: Plugin.Headers, e: unknown): 
 
     error.headers = {
         ...errorHeaders,
-        ...corsHeaders,
+        ...headers,
         vary: mergedVary
     };
 

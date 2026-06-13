@@ -14,12 +14,15 @@ export interface Options {
     shouldSkip?: false | Plugin.Predicate;
 }
 
+export interface Headers {
+    [field: string]: string;
+}
+
 export namespace Plugin {
     export type Origin = string | Set<string> | ComputeOrigin;
     export type ComputeOrigin = (ctx: Context) => string | Promise<string>;
     export type OriginResolver = (ctx: Context, requestOrigin: string) => string | Promise<string>;
     export type Credentials = boolean | Predicate;
     export type Predicate = (ctx: Context) => boolean | Promise<boolean>;
-    export type Headers = Record<string, string>;
     export type E = Error & { headers?: Headers };
 }

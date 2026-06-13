@@ -3,268 +3,233 @@
 All notable changes to this project will be documented in this file.
 The project adheres to [Semantic Versioning](https://semver.org).
 
+A more detailed list of changes can be found **[Here](https://github.com/nhankyjangchan/koa-cors/tree/main/docs)**.
+
+## **2.1.4** / 2026-06-13
+
+### Changed
+
+- **Type Definitions**: `Plugin.Headers` replaced by separate `Headers` interface with `string` index signature.
+- **`applyHeader` Extraction**: Moved to `src/lib/utils/applyHeader.ts`, now takes 4 parameters — eliminates per-request function allocation.
+- **`mergeHeadersWithError` Refactoring**: `corsHeaders` renamed to `headers` with updated `Headers` type.
+- **`cors` Middleware**: Updated `applyHeader` calls, removed unnecessary `await`, rewrote `shouldSkip` conditional logic.
+- **Documentation**: Added `docs/` folder with full type declarations and changelog. Minified `README.md` options section, updated links.
+
+### Removed
+
 ## **2.1.3** / 2026-06-12
 
 ### Changed
 
-- **Type Definitions**: `Plugin.Headers` type has been changed from `Record<string, string | undefined>` to `Record<string, string>` and no longer allows headers with potentially undefined values.
-- **`createOriginResolver` Factory Internal Refactoring**: The auxiliary constant `isOriginSet` has been removed; the check for whether `origin` argument belongs to a `Set` has been moved directly to the branch operator.
-- **`createCredentialsResolver` Factory Strategy Refactoring**: The `staticCredentials` strategy of the `createCredentialsResolver` factory now explicitly casts the return value to a `boolean` type.
-- **Declared Parameter Type of `addOriginToVary` Utility**: The `existingVary` parameter for the argument in `addOriginToVary` function is now of type `unknown`, which is more semantically correct.
-- **Accessing Error Headers in `mergeHeadersWithError`**: The `headers` property of the `error` object in the body of `mergeHeadersWithError` is now accessed via the dot notation `error.headers` rather than the optional sequence operator `error?.headers`.
-- **`cors` Middleware Factory Refactoring**: The `pluginOptions` middleware options are now destructured into separate variables: `const { origin, credentials, allowMethods... etc. } = pluginOptions` directly in the body of the `cors` factory. Instead of accessing the `pluginOptions` property, direct access to the options is used, improving code readability. Based on this change, the code has been refactored.
-- **Dependency Versions**: Updated `prettier` from `^3.8.3` to `^3.8.4` in `devDependencies`.
-- **Documentation**: Updated `README.md`. The changes include a block of features and middleware options.
+- **Type Definitions**: `Plugin.Headers` changed from `Record<string, string | undefined>` to `Record<string, string>`.
+- **`createOriginResolver`**: Removed `isOriginSet` constant, inlined check.
+- **`createCredentialsResolver`**: `staticCredentials` now explicitly casts to `boolean`.
+- **`addOriginToVary`**: `existingVary` parameter typed as `unknown`.
+- **`mergeHeadersWithError`**: `error.headers` accessed via dot notation instead of optional chaining.
+- **`cors` Middleware**: Destructured `pluginOptions` into separate variables, refactored code for readability.
+- **Dependencies**: Updated `prettier` from `^3.8.3` to `^3.8.4`.
+- **Documentation**: Updated `README.md` features and options.
 
 ## **2.1.2** / 2026-06-12
 
 ### Added
 
-- **`Plugin.Origin` Type**: Added a dedicated `Origin` type alias (`string | Set<string> | ComputeOrigin`) in the `Plugin` namespace, providing a reusable type for the `origin` option and resolver factory parameter.
-- **`Plugin.Credentials` Type**: Added a dedicated `Credentials` type alias (`boolean | Predicate`) in the `Plugin` namespace, providing a reusable type for the `credentials` option and resolver factory parameter.
-- **Tests**: New test cases have been added, bringing the total number of tests to 76.
+- **Types**: `Plugin.Origin` and `Plugin.Credentials` type aliases.
+- **Tests**: 76 total tests.
 
 ### Changed
 
-- **Type Definitions**:
-    - `Plugin.Headers` type changed from `Record<string, string>` to `Record<string, string | undefined>`, allowing headers with potentially undefined values.
-    - `Plugin.E.headers` is now optional (`headers?: Headers` instead of `headers: Headers`), which is more semantically correct.
-    - The `Options` interface now references `Plugin.Origin` and `Plugin.Credentials` instead of inline type unions (`string | Set<string> | Plugin.ComputeOrigin` and `boolean | Plugin.Predicate`).
-- **Resolver Factory Signatures**: `createOriginResolver` and `createCredentialsResolver` now accept their specific option field directly (`origin?: Plugin.Origin` and `credentials?: Plugin.Credentials`) rather than the entire `Options` object.
-- **`createCredentialsResolver` Internal Naming**: The internal dynamic resolution function has been renamed from `computeCredentials` to `resolveDynamicCredentials`, aligning with the naming convention established in `createOriginResolver` (`resolveDynamicOrigin`). The `credentials` parameter is now typed as `Plugin.Credentials | undefined` and is optional.
-- **`createOriginResolver` Implementation**: The `origin` parameter is now typed as `Plugin.Origin | undefined` and is optional. Internal resolver functions now reference the `origin` parameter directly instead of accessing `pluginOptions.origin` from the outer scope, improving clarity and reducing closure overhead. The `resolveDynamicOrigin` function uses an explicit `Plugin.ComputeOrigin` cast instead of the generic `Function` cast. The `matchOriginFromList` function uses a descriptive `setOfOrigins` variable name instead of inline casting.
-- **`normalizeMaxAge` Function**: The function signature has been updated from `(maxAge: number)` to `(maxAge: string | number = '')`. This eliminates the need for unary `+` coercion at the call site and adds a default empty string parameter. The function now includes an early return for falsy values (`!maxAge`), and validates both numeric and string-integer inputs via `Number.isInteger(+maxAge)`.
-- **`mergeVaryWithOrigin` Renamed to `addOriginToVary`**: The function has been renamed for improved semantic clarity. The new name more accurately describes its single responsibility — adding the `origin` field name to an existing `Vary` header value. The implementation remains identical.
-- **`mergeErrorHeaders` Renamed to `mergeHeadersWithError`**: The function has been renamed for improved semantic clarity. The function signature has been updated to accept `(corsHeaders, e)` instead of `(error, corsHeaders)`, placing the primary data (CORS headers) first. Additionally, the function now handles non-Error throwables by creating an `Error` instance via `new Error(String(e))`, ensuring CORS headers are reliably attached even when downstream middleware throws primitive values. The function now uses destructuring with rest spread (`const { Vary, vary, ...errorHeaders }`) to isolate and remove `Vary`/`vary` keys, replacing the previous `delete` operator approach with a purely functional pattern.
-- **`cors` Middleware Factory**: Updated all calls to resolver factories and utility functions to match their new signatures. The resolver factories now receive `pluginOptions.origin` and `pluginOptions.credentials` directly instead of the entire `pluginOptions` object. The `maxAge` normalisation call now passes `pluginOptions.maxAge` directly without unary `+` coercion. The `catch` clause variable renamed from `error` to `e` for consistency with the updated utility function signature. All imports now use path aliases.
+- **Type Definitions**: `Plugin.E.headers` now optional. `Options` uses new type aliases.
+- **Resolver Factories**: Now accept specific option fields directly instead of full `Options` object.
+- **`createCredentialsResolver`**: Internal function renamed to `resolveDynamicCredentials`. Parameter typed as `Plugin.Credentials | undefined`.
+- **`createOriginResolver`**: Parameter typed as `Plugin.Origin | undefined`. Uses explicit `Plugin.ComputeOrigin` cast.
+- **`normalizeMaxAge`**: Signature changed to `(maxAge: string | number = '')`, added early return and validation.
+- **Renaming**: `mergeVaryWithOrigin` → `addOriginToVary`, `mergeErrorHeaders` → `mergeHeadersWithError`. Updated signature to `(corsHeaders, e)`, handles non-Error throwables, uses spread destructuring.
+- **`cors` Middleware**: Updated all calls to match new signatures, uses path aliases.
 
 ## **2.1.1** / 2026-06-01
 
 ### Info
 
-- **Module Extraction**: Core logic previously inlined within `index.ts` has been extracted into dedicated, single-responsibility modules under `src/lib/`, improving maintainability, testability, and separation of concerns:
-    - `src/_types/pluginTypes.ts` — `Options` interface and `Plugin` namespace with all internal types
-    - `src/lib/options/defaultPluginOptions.ts` — default configuration values
-    - `src/lib/resolvers/createOriginResolver.ts` — origin validation strategy factory
-    - `src/lib/resolvers/createCredentialsResolver.ts` — credentials resolution strategy factory
-    - `src/lib/utils/normalizeMaxAge.ts` — `maxAge` validation and normalisation
-    - `src/lib/utils/mergeErrorHeaders.ts` — CORS header attachment for thrown errors
+- **Module Extraction**: Core logic split into single-responsibility modules under `src/lib/`.
 
 ### Added
 
-- **`normalizeMaxAge` Utility**: Added a standalone utility function for validating and normalising the `maxAge` option. The function accepts a number, returns its string representation for valid integer values, and returns `null` for floats, `NaN`, and non-numeric inputs. This replaces the previous inline ternary expression in `index.ts`.
-- **`mergeErrorHeaders` Utility**: Extracted the error-time CORS header attachment logic from the `try/catch` block into a dedicated `mergeErrorHeaders` function. The function merges CORS response headers into the thrown error's `headers` property, normalises the `Vary` header via `mergeVaryWithOrigin`, and removes duplicate `Vary`/`vary` keys. It returns the error cast to `Plugin.E` for consistent typing.
-- **Tests**: Added 3 new test cases for the `normalizeMaxAge` utility covering integer input, float input, and non-numeric input. Added 1 new test case for `mergeVaryWithOrigin` verifying lowercase normalisation of all field names (e.g., `X-Api, X-Vue-App` → `origin, x-api, x-vue-app`). Updated the existing 7 `mergeVaryWithOrigin` tests to expect lowercase output throughout (e.g., `Origin` → `origin`, `[object Object]` → `[object object]`). Total test suite now passes **62 out of 62 tests** across 3 files, with **100% code coverage** across all 7 source modules.
+- **`normalizeMaxAge` Utility**: Standalone validation/normalisation replacing inline expression.
+- **`mergeErrorHeaders` Utility**: Extracted error-time CORS header attachment logic.
+- **Tests**: +4 test cases, 62/62 passing, 100% code coverage.
 
 ### Changed
 
-- **`mergeVaryWithOrigin` Lowercase Normalisation**: The function now converts all `Vary` field names to lowercase before deduplication and output. This guarantees complete deduplication regardless of header name casing (e.g., `Origin, ORIGIN, origin` now correctly collapses to `origin`), fully leveraging the case-insensitive nature of HTTP header field names. Previously, field names were preserved in their original casing with only case-insensitive `Origin` deduplication; other duplicate field names differing in case could appear multiple times in the output.
-- **`maxAge` Normalisation**: Replaced the inline expression `Number.isInteger(+pluginOptions.maxAge!) ? String(pluginOptions.maxAge) : null` with a call to the extracted `normalizeMaxAge` utility function.
-- **Error Handling in `try/catch` Block**: The inline error header merging logic within the `catch` clause has been delegated to the new `mergeErrorHeaders` utility function. The `catch` block now simply calls `throw mergeErrorHeaders(error, corsHeaders)`, reducing indentation depth and improving readability of the middleware's main request processing path.
-- **Type Definitions Location**: The `Options` interface and `Plugin` namespace have been moved from `index.ts` into a dedicated `src/_types/pluginTypes.ts` file. `index.ts` now imports these types, keeping the main module focused on the middleware factory function.
-- **Default Options Location**: The `defaultOptions` constant has been moved from the `cors` function body in `index.ts` into a dedicated `src/lib/options/defaultPluginOptions.ts` module, removing it from the hot path visual scope.
-- **Resolver Factories Location**: The `createOriginResolver` and `createCredentialsResolver` factory functions have been extracted from the `cors` function body into their own modules under `src/lib/resolvers/`. These are now imported and invoked at the top of the middleware factory function, preserving the same closure-based pre-computation strategy.
-- **`credentials` Variable Immutability**: The `credentials` variable in the middleware closure is now declared with `const` instead of `let`, reflecting that its value is never reassigned after the initial `await resolveCredentials(ctx)` call.
+- **`addOriginToVary`**: Lowercase normalisation of all field names for complete deduplication.
+- **`maxAge` Normalisation**: Replaced inline expression with `normalizeMaxAge` call.
+- **Error Handling**: Delegated to `mergeHeadersWithError` utility.
+- **Locations**: Types moved to `src/_types/`, defaults to `src/lib/options/`, resolvers to `src/lib/resolvers/`.
+- **Immutability**: `credentials` variable now `const`.
 
 ### Removed
 
-- **`@types/http-errors` Dependency**: Removed the `@types/http-errors` package from dev dependencies. Error objects are now typed using the custom `Plugin.E` interface, eliminating all references to `HttpError`.
+- **`@types/http-errors`**: Removed, using custom `Plugin.E` interface.
 
 ## **2.1.0** / 2026-05-23
 
 ### Info
 
-- **No Dependency on `vary`**: The package no longer depends on the external `vary` package for HTTP `Vary` header manipulation. The merging logic has been internalised into a dedicated `mergeVaryWithOrigin` utility, reducing the dependency footprint and allowing stricter control over header merging behaviour.
-- **Build Output Structure**: Compiled artifacts are now organised into subdirectories within `dist/`:
-    - `dist/esm/` — ECMAScript modules
-    - `dist/cjs/` — CommonJS modules
-    - `dist/types/` — TypeScript declaration files
-- **Dual Export**: The middleware now supports both default and named imports in ESM (`import cors` and `import { cors }`), and both `require('...')` and `require('...').cors` in CJS, providing greater flexibility for various module systems.
+- **No `vary` Dependency**: Internalised Vary header manipulation.
+- **Build Output**: Subdirectories — `dist/esm/`, `dist/cjs/`, `dist/types/`.
+- **Dual Export**: Supports default and named imports (ESM/CJS).
 
 ### Added
 
-- **`mergeVaryWithOrigin` Utility**: Added a standalone utility function for merging the `Origin` field name into existing `Vary` header values. The function correctly handles the `Vary: *` wildcard (returning `*` as-is), deduplicates `Origin` in a case-insensitive manner, preserves the original field name order with `Origin` always placed first, and safely stringifies non-string inputs.
-- **Tests**: Added 7 new test cases for the `mergeVaryWithOrigin` utility, covering wildcard handling, empty input, field name deduplication, case-insensitive matching, multiple field names, and non-string input coercion. Total test suite now passes 58 out of 58 tests.
+- **`addOriginToVary` Utility**: Internal Vary header merging, handles wildcard, deduplication, case-insensitivity.
 
 ### Changed
 
-- **`Vary` Header Merging in Error Handling**: The `try/catch` block for non-OPTIONS requests now uses the internal `mergeVaryWithOrigin` function instead of the `append` helper from the `vary` package. This change is functionally transparent — `Vary` header merging behaviour remains consistent — but eliminates the external dependency.
-- **Build Scripts**: Updated Bun build commands to use `--outdir` with `--entry-naming` instead of `--outfile`, and `--packages external` instead of `--external '*'`. This produces the new subdirectory-based output structure (`dist/esm/`, `dist/cjs/`, `dist/types/`).
-- **Package Exports Map**: Updated `exports` paths in `package.json` to reflect the new subdirectory structure:
-    - `types`: `./dist/index.d.ts` → `./dist/types/index.d.ts`
-    - `import`: `./dist/index.mjs` → `./dist/esm/index.mjs`
-    - `require`: `./dist/index.cjs` → `./dist/cjs/index.cjs`
-- **Dependency Versions**: Updated `@types/koa` from `^3.0.2` to `^3.0.3` and `koa` from `^3.2.0` to `^3.2.1` in `devDependencies`.
-- **Import Style in Tests**: Updated import from `import cors from '../src/index.js'` to `import { cors } from '../src/index.ts'` to use the named export and TypeScript source directly.
+- **Vary Merging**: Uses internal `addOriginToVary` instead of `vary` package.
+- **Build Scripts**: Updated for subdirectory output.
+- **Package Exports**: Updated paths for new structure.
+- **Dependencies**: Updated `@types/koa` and `koa`.
+- **Tests**: Updated import style.
 
 ### Removed
 
-- **`vary` Dependency**: Removed the `vary` package from `dependencies` and `@types/vary` from `devDependencies`.
+- **`vary` Dependency**: Removed completely.
 
 ## **2.0.1** / 2026-05-17
 
 ### Fixed
 
-- **Type Definitions**: Added the missing `export default cors` declaration in `index.d.ts`. In v2.0.0, the named `export function cors` was present but the default export was accidentally omitted, causing TypeScript compilation errors for consumers using `import cors from '@nhankyjangchan/koa-cors'` with `esModuleInterop` or `allowSyntheticDefaultImports` enabled. The dual-export pattern (`export function cors` + `export default cors`) introduced in v2.0.0 is now fully functional for both default and named imports.
+- **Type Definitions**: Added missing `export default cors` declaration.
 
 ## **2.0.0** / 2026-05-17
 
 ### Info
 
-- **Breaking Change**: The `origin` option now uses `Set<string>` instead of `string[]` for whitelist-based origin validation. Arrays are no longer accepted. Users migrating from previous versions must replace `origin: ['https://example.com', 'https://another.com']` with `origin: new Set(['https://example.com', 'https://another.com'])`.
-- **Breaking Change**: Minimum supported Node.js version has been raised from `>=20` to `>=22`, and npm from `>=8` to `>=10`. This reflects the end-of-life status of older Node.js and npm releases and allows the package to leverage modern runtime features.
-- **Build Output**: The CommonJS and ESM build artifacts are no longer minified. This improves debuggability and readability of the distributed code, making stack traces and error inspection significantly easier in production environments without relying on source maps.
-- **Package Metadata**: Updated the `keywords` array in `package.json` to include the current and legacy package names (`@nhankyjangchan/koa-cors`, `@nhankyjangchan/koajs-cors`). This change affects only npm search indexing and does not impact the middleware's functional logic.
+- **Breaking**: `origin` now uses `Set<string>` instead of `string[]`.
+- **Breaking**: Minimum Node.js ≥22, npm ≥10.
+- **Build**: Artifacts no longer minified.
 
 ### Changed
 
-- **Origin Whitelist Type**: The `origin` option in the `Options` interface now accepts `Set<string>` instead of `string[]` for whitelist-based origin validation. The internal `matchOriginFromList` resolver uses `Set.prototype.has()` for O(1) lookups, replacing the previous `Array.prototype.includes()` O(n) scan. This significantly improves performance for large origin whitelists and provides stronger typing semantics.
-- **Export Pattern**: The function export style in the source code has been changed from `export default function cors()` to a separate named `export function cors()` paired with `export default cors`. This dual-export pattern allows consumers to import the middleware via both `import cors from '...'` (default) and `import { cors } from '...'` (named), providing greater flexibility for various module systems and coding conventions.
-- **Type Definitions**: Updated `origin` type in `index.d.ts` from `string | string[] | Plugin.ComputeOrigin` to `string | Set<string> | Plugin.ComputeOrigin`. JSDoc examples and descriptions have been updated to reflect the new `Set`-based whitelist usage.
-- **Documentation**: Updated `README.md` to reflect the `Set<string>` type for the `origin` option. The "Features" section and option descriptions now correctly reference `Set` instead of array-based whitelists.
-- **Tests**: Updated all test cases that previously used arrays for the `origin` option to use `Set` instances. The invalid origin type test now passes an array `['invalid']` to verify that the middleware correctly responds with `500` for unsupported types (arrays are no longer valid). The dynamic origin resolver test for non-string return values now uses an array `['invalid']` instead of a `Set` object to test the type-guard rejection path, while keeping the `Set` test for the new valid whitelist use case. All 51 tests continue to pass.
+- **Origin Whitelist**: O(1) lookups via `Set.prototype.has()`.
+- **Export Pattern**: Dual `export function cors` + `export default cors`.
+- **Type Definitions**: Updated `origin` type and JSDoc.
+- **Documentation**: Updated `README.md` for `Set` usage.
+- **Tests**: Updated for `Set` instances, 51/51 passing.
 
 ### Removed
 
-- **Package Legacy Entry Points**: The `types`, `module`, and `main` fields have been removed from `package.json`. Module resolution is now handled exclusively through the `exports` map, which provides a cleaner and more modern approach to defining package entry points for different module systems (ESM, CJS, and TypeScript declarations).
+- **Package Entry Points**: `types`, `module`, `main` removed — `exports` map only.
 
 ## **1.4.4** / 2026-04-30
 
-### Info
-
-- **No Functional Changes**: This release includes only documentation and metadata improvements. The middleware logic, public API, and test suite remain unchanged from v1.4.2.
-
 ### Changed
 
-- **Documentation**: Updated `README.md` with improved visual hierarchy and readability. Added coverage and test count badges to the header section. The "Installation" section now includes a note about installing `@types/koa` for TypeScript users, and the legacy package installation instruction has been removed to reduce clutter and guide users toward the current package only.
-- **Development Dependencies**: Updated `typescript` from `^6.0.2` to `^6.0.3` in `devDependencies`.
+- **Documentation**: Improved `README.md`, added badges.
+- **Dependencies**: `typescript` updated to `^6.0.3`.
 
 ## **1.4.3** / 2026-04-21
 
-### Info
+### Changed
 
-- **Documentation**: The `README.md` file has been updated with improved visual hierarchy and readability.
-- **Development Files**: Updated `.gitignore` and `.prettierignore` to reflect current project structure and tooling preferences.
-- **No Functional Changes**: This release includes only documentation and metadata improvements. The middleware logic, public API, and test suite remain unchanged from v1.4.2.
+- **Documentation**: `README.md` visual improvements. Updated `.gitignore`, `.prettierignore`.
 
 ## **1.4.2** / 2026-04-18
 
 ### Added
 
-- **Tests**: Added 1 new test case covering dynamic origin resolver returning a non-string value (`Set` object). The test verifies that the middleware correctly responds with a `500` status code and does not leak any CORS headers in the error response.
+- **Tests**: +1 test for dynamic origin returning non-string value.
 
 ### Changed
 
-- **Naming Refactor in Origin Resolver**: Internal resolution strategies within `createOriginResolver` have been renamed for improved semantic clarity:
-    - `matchOriginFromString` → **`matchExactOrigin`**: Better reflects the exact-match validation behavior for string-based origin configuration.
-    - `computeOrigin` → **`resolveDynamicOrigin`**: More accurately describes the resolution process for function-based origin configuration.
-    - `matchOriginFromArray` → **`matchOriginFromList`**: Clarifies that the function validates against a whitelist array of allowed origins.
-- **Error Handling Variable Naming**: Within the `try/catch` block for non-OPTIONS requests, local variables have been renamed for conciseness and readability:
-    - `baseVaryHeader` → **`baseVary`**: Shortened without loss of meaning.
-    - `mergedVaryHeader` → **`mergedVary`**: Shortened without loss of meaning.
-- **Dynamic Origin Type Safety**: The `resolveDynamicOrigin` function now includes an explicit type guard check (`typeof origin === 'string'`). If the user-provided resolver returns a non-string value, the middleware correctly throws a `500 Internal Server Error` instead of passing an invalid origin downstream, aligning with the error handling behavior introduced in v1.4.0 for invalid `origin` option types.
-- **Code Consistency**: Minor variable name adjustments in the error handling block to maintain consistent stylistic conventions across the codebase.
+- **Naming**: Internal resolvers renamed for clarity.
+- **Error Handling**: Shortened variable names.
+- **Dynamic Origin Safety**: Added `typeof origin === 'string'` type guard.
 
 ## **1.4.1** / 2026-04-17
 
-### Info
-
-- **Documentation**: The `README.md` file has been significantly updated with a clearer structure, improved feature list, and a dedicated package migration note. The feature list is now fully synchronised with `index.d.ts`. The security policy (`SECURITY.md`) has been rewritten for clarity and now includes detailed migration instructions, a recognition section, and a consistent visual style.
-- **No Functional Changes**: This release includes only documentation and metadata updates. The middleware logic and public API remain unchanged from v1.4.0.
-
 ### Changed
 
-- **Type Definitions (`index.d.ts`)**: Enhanced JSDoc comments across the `Options` interface and `Plugin` namespace. Added `@see` references to MDN and Fetch Standard specifications for all CORS-related options. Improved the feature list in the main `cors` function description to be more comprehensive and aligned with `README.md`.
+- **Documentation**: `README.md` restructured, `SECURITY.md` rewritten.
+- **Type Definitions**: Enhanced JSDoc with MDN/Fetch spec references.
 
 ## **1.4.0** / 2026-04-15
 
 ### Info
 
-- **Package Migration**: The previous package `@nhankyjangchan/koajs-cors` is now considered **legacy** and will enter **maintenance mode**. Legacy package will receive critical security fixes only starting from version `1.3.x`. Users are strongly encouraged to migrate to `@nhankyjangchan/koa-cors` to receive ongoing feature updates and improvements.
-- **Package Renamed**: The package has been officially renamed from `@nhankyjangchan/koajs-cors` to **`@nhankyjangchan/koa-cors`**. This change reflects a cleaner, more conventional naming pattern for Koa middleware packages and aligns with community standards.
-- **Package Metadata**: All metadata fields in `package.json` have been updated to reflect the new package name, including `name`, `bugs`, `homepage`, and `repository`. Package description, keywords, author information, and license remain unchanged to maintain consistency.
-- **GitHub Repository**: The repository has been renamed from `koajs-cors` to **`koa-cors`**. All references in the package metadata, documentation, and badges have been updated accordingly. Issue templates have also been updated to reflect the new package and repository name. GitHub automatically redirects traffic from the old repository URL to the new one, ensuring existing links and bookmarks continue to function without interruption.
-- **Security Policy**: The package security policy has been updated to reflect the package changes. The supported versions table has been revised to include the `1.4.x` release line as actively maintained, while `1.2.x` and `1.1.x` are now marked as no longer supported. All security advisory procedures and disclosure policies remain otherwise unchanged.
+- **Package Migration**: Renamed to `@nhankyjangchan/koa-cors`. Legacy package enters maintenance mode.
+- **Repository**: Renamed to `koa-cors`.
 
 ### Added
 
-- **Tests**: Added 1 new test case covering the invalid `origin` type scenario (`Set` object passed as `origin`). The test verifies that the middleware correctly responds with a `500` status code and does not leak any CORS headers in the error response. Total test suite now passes 50 out of 50 tests.
+- **Tests**: +1 test for invalid origin type, 50/50 passing.
 
 ### Changed
 
-- **Optional Options Parameter**: The `options` parameter in the middleware factory function is now optional and defaults to an empty object `{}`. Previously, the parameter was required, forcing users to explicitly pass an object even when using all default settings. This change improves developer experience by allowing the middleware to be used as `app.use(cors())` without providing an empty configuration object.
-- **Invalid Origin Type Handling**: Updated error handling for invalid `origin` option types. Previously, when the `origin` option was set to an invalid type (e.g., `number`, `boolean`, `object`, `Set`, `Map`, etc.), the middleware would incorrectly respond with a `403 Forbidden` error, which was semantically misleading since the issue is a server-side configuration error rather than an authorization failure. The middleware now correctly throws a `500 Internal Server Error`, providing clearer and more accurate feedback during development and debugging.
-- **Type Definitions Refactoring**: Internal type definitions (`Predicate`, `OriginResolver`, `CredentialsResolver`, `Headers`) have been moved into a dedicated `Plugin` namespace. This improves code organization and provides a cleaner public API surface for TypeScript users. The `Options` interface now references `Plugin.ComputeOrigin` and `Plugin.Predicate` instead of inline function signatures.
+- **Optional Options**: `options` parameter now defaults to `{}`.
+- **Invalid Origin Handling**: Returns `500` instead of `403` for invalid types.
+- **Type Definitions**: Moved to `Plugin` namespace.
 
 ## **1.3.2** / 2026-04-13
 
-### Info
-
-- **No Functional Impact**: The changes in this release are limited to internal code organization, package manifest metadata, and build artifact formatting. There are no changes to API contracts, request handling logic, or type definitions. Existing tests (49/49) continue to pass without modification.
-
 ### Changed
 
-- **Code Cleanup**: Moved `originType` and `isOriginArray` constant initialization inside the `createOriginResolver` factory function. This is a cosmetic refactor that does not alter runtime behavior or performance characteristics; it simply keeps the variable declarations closer to their usage scope within the resolver factory.
-- **Package Metadata**: Updated the `keywords` array in `package.json` to correct the casing of the package name. This change affects only npm search indexing and does not impact the middleware's functional logic.
-- **CommonJS Build Output**: The compiled `index.cjs` file now includes a `'use strict'` directive. This ensures strict mode compliance for legacy CommonJS environments and aligns the build artifact with modern JavaScript best practices, while having zero impact on the middleware's API or functional behavior.
+- **Code Cleanup**: Moved variable declarations closer to usage.
+- **Package Metadata**: Corrected keywords casing.
+- **Build Output**: Added `'use strict'` to CJS artifact.
 
 ## **1.3.1** / 2026-04-12
 
 ### Fixed
 
-- **`maxAge` Type Extension**: The `maxAge` option in the `Options` interface now accepts `number` and `undefined` in addition to `string`. This aligns the TypeScript definitions with the internal runtime coercion logic (`String(pluginOptions.maxAge)`), allowing users to pass numeric values (e.g., `3600`) directly without type errors.
+- **`maxAge` Type**: Now accepts `number` and `undefined` in addition to `string`.
 
 ## **1.3.0** / 2026-04-11
 
 ### Added
 
-- **Dynamic Credentials Resolution**: The `credentials` option now accepts a function `(ctx: Context) => boolean | Promise<boolean>`, enabling dynamic and context-aware CORS credential policies (e.g., enabling credentials only for authenticated requests).
-- **Tests**: Added 5 new test cases covering function-based `credentials` and `shouldSkip` options, bringing the total test suite to 49 of 49 passing tests.
+- **Dynamic Credentials**: `credentials` now accepts function for context-aware policies.
+- **Tests**: +5 tests, 49/49 passing.
 
 ### Changed
 
-- **Origin Resolver Factory**: Introduced `createOriginResolver` factory function. This closure pre-computes the origin validation strategy at startup and returns a bound resolver (`matchOriginFromString`, `computeOrigin`, `matchOriginFromArray`, or `rejectRequest`) based on `Options.origin` type, eliminating redundant type checking on every request cycle and positively impacting performance.
-- **Credentials Resolver Factory**: Introduced `createCredentialsResolver` factory function. This closure pre-computes the credentials resolution strategy at startup, returning either `computeCredentials` (for function-based config) or `staticCredentials` (for boolean config), optimizing per-request evaluation.
-- **`shouldSkip` Evaluation**: The `typeof pluginOptions.shouldSkip === 'function'` check is now computed once at startup and stored in `isShouldSkipFunction` constant, removing runtime type checking overhead on every request.
+- **Resolver Factories**: Pre-compute strategies at startup for performance.
+- **`shouldSkip`**: Type check computed once at startup.
 
 ## **1.2.0** / 2026-04-10
 
 ### Added
 
-- **Dynamic Origin Resolution**: The `origin` option now accepts a function `(ctx: Context) => string | Promise<string>`, allowing for asynchronous and context-aware origin validation (e.g., database lookups or complex whitelist logic).
-- **Conditional Skipping**: Added `shouldSkip` option. Accepts a function `(ctx: Context) => boolean | Promise<boolean>` to bypass CORS headers entirely for specific requests (e.g., static assets or internal health checks) without executing origin validation logic.
-- **Tests**: Added 4 new test cases specifically for the function-based `origin` option, all passed successfully
+- **Dynamic Origin**: `origin` now accepts function for async resolution.
+- **Conditional Skipping**: `shouldSkip` option to bypass CORS.
+- **Tests**: +4 tests for function-based origin.
 
 ### Changed
 
-- **Origin Validation Flow**: Refactored internal origin checking into dedicated `resolveOrigin`, `matchOriginFromString`, `matchOriginFromArray`, and `computeOrigin` functions for improved code clarity and maintainability.
-- **Default Options**: Explicitly set `shouldSkip: false` in `defaultOptions` to ensure predictable behavior when the option is omitted.
-- **Naming**: Internal helper `setHeader` renamed to `applyHeader` and variable `errorHeaders` renamed to `headersFromError` for better semantic accuracy.
+- **Origin Validation**: Refactored into dedicated functions.
+- **Defaults**: `shouldSkip: false` set explicitly.
+- **Naming**: `setHeader` → `applyHeader`.
 
 ### Removed
 
-- **Redundant Validation**: Removed the explicit check for `pluginOptions.origin` existence (the `doesOriginExist` boolean logic from v1.1.0) as the `resolveOrigin` function now gracefully handles missing or invalid configurations via type checking and 403 fallback.
+- **Redundant Validation**: Removed `doesOriginExist` check.
 
 ## **1.1.0** / 2026-04-07
 
 ### Added
 
-- **Tests**: Integrated a comprehensive test suite. Currently passing 40 out of 40 tests to ensure middleware stability.
+- **Tests**: 40/40 passing.
 
 ### Changed
 
-- **Origin Validation**: Strict origin checking for string-based `origin` option. Previously any string was accepted; now the middleware validates that the request origin matches the configured origin (or allows `'*'`), otherwise throws 403.
-- **Error Handling**: Refactored the header merging logic during exceptions. The middleware now:
-    - Removes existing `Vary`/`vary` headers from the error object before injecting a merged `Origin` value to prevent duplicates and casing issues.
-    - No longer uses `instanceof HttpError` checks, simplifying error handling across different error types.
-- **Header Consistency**: Improved how `err.headers` are constructed to ensure CORS headers are reliably attached to all thrown objects, regardless of their origin.
+- **Origin Validation**: Strict string matching, `'*'` wildcard support.
+- **Error Handling**: Removed `Vary`/`vary` duplicates, no `instanceof HttpError` checks.
+- **Headers**: CORS headers reliably attached to all thrown objects.
 
 ### Removed
 
-- **`http-errors` dependency**: The middleware no longer relies on runtime `HttpError` checks, using only the type import. This makes it more lightweight and compatible with various error-throwing patterns.
+- **`http-errors` Runtime**: Only type import remains.
 
 ## **1.0.0** / 2026-04-05
-
-### Info
 
 - Initial release.
